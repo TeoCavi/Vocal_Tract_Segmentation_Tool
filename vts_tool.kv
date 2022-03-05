@@ -1,0 +1,100 @@
+<Home>:
+    canvas.before:
+        Color:
+            rgba: 0.5, 0.5, 0.5, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size 
+    padding: 5
+    spacing:5
+    orientation: "horizontal"
+
+    sbj: _sbj
+    sbjtask: _sbjtask
+    pred: _pred
+    msg: _msg
+    mri: _mri
+
+
+    BoxLayout:                          #connection part
+        spacing: 5
+        size_hint: (.5,1)
+        orientation: "vertical"
+        BoxLayout: 
+            spacing:5
+            size_hint: (1,.2)      
+            orientation:"vertical"
+            BoxLayout:
+                orientation:"vertical"              
+                Spinner:
+                    id: _sbj
+                    text: "Subject"
+                    text_size: self.size
+                    halign: "center"
+                    valign: "center"
+                    click: False
+                    press: False
+                    on_press: self.press = True
+                    on_text: self.click = True
+                
+
+                Spinner:
+                    id: _sbjtask
+                    text: "Available Task"
+                    text_size: self.size
+                    halign: "center"
+                    valign: "center"
+                    disabled: True
+                    click: False
+                    press: False
+                    on_text: self.click = True
+                    on_press: self.press = True
+
+
+            Button:
+                id: _pred
+                text: "Predict"
+                text_size: self.size
+                halign: "center"
+                valign: "center"
+                disabled: True
+                on_press: root.Prediction()
+
+
+    BoxLayout:                          #data visualization
+        orientation:"vertical"
+        spacing: 5
+        id: _mainbx
+        rect_image: self.rect_image
+        BoxLayout:
+            orientation: "horizontal"
+            padding: (0,0)
+            size_hint:(1,.20)
+            ScrollView:
+                spacing: 5
+                size_hint:(1,1)
+                scrool_y:True
+                scrool_x:False
+                canvas.before:
+                    Color:  
+                        rgba: 1, 1, 1, 0.7  
+                    Rectangle:  
+                        pos: self.pos 
+                        size: self.size
+                Label:
+                    id: _msg
+                    text: "Welcome, Select one subject" 
+                    color: (0,0,0,1)
+                    text_size: self.width, None
+                    font_size:20
+                    size_hint_y: None
+                    height: self.texture_size[1]
+        BoxLayout:
+            id: _mri
+            orientation: "horizontal"
+            padding: 5
+            spacing:5
+            canvas.before:
+
+
+
