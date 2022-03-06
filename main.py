@@ -1,3 +1,4 @@
+#%%
 from turtle import color, home
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ from kivy.graphics.texture import Texture
 from kivy.uix.label import Label
 from kivy.graphics import Color
 from kivy.uix.button import Button
+from kivy.uix.togglebutton import ToggleButton
 from kivy.graphics import Rectangle
 from kivy.properties import ObjectProperty
 from kivy.uix.scrollview import ScrollView
@@ -97,6 +99,7 @@ class Home (BoxLayout):
             self.fdir = os.path.join(self.taskdir, self.sbjtask.text)
 
     def Prediction(self, *args):
+        self.slider.value = 0.0
         self.msg.text = 'I am loading ' + self.sbj.text + ' video...'
         self.sbjtask.click = False
         self.sbj.click = False
@@ -108,6 +111,8 @@ class Home (BoxLayout):
         check = True
         i = 0
         images_to_keep = 354  #all is 354
+        self.slider.max = images_to_keep-1
+        self.slider.min = 0
         step = int((frameCount-1)/images_to_keep)
         step_i = step
         self.msg.text = 'I am extracting frames...'
@@ -119,10 +124,11 @@ class Home (BoxLayout):
                 frames.append(arr)
                 step = step + step_i
             i = i+1
-        self.frames = np.rot90(np.asarray(frames), 2)
+        self.plot_mri = np.rot90(np.asarray(frames), 2)
+        self.image = np.asarray(frames)
 
         rgb_weights = [0.2989, 0.5870, 0.1140]
-        self.image = np.dot(self.frames[...,:3], rgb_weights)
+        self.image = np.dot(self.image[...,:3], rgb_weights)
 
         lb = np.amin(self.image)
         ub = 130.89391984
@@ -138,67 +144,147 @@ class Home (BoxLayout):
         self.predictions = model.predict(self.image)
         print(self.predictions.shape)
 
-        self.predictions = Home().prediction_recomposition(self.predictions, out_classes = True)
+        self.predictions = Home().prediction_recomposition(self.predictions, rgba = [1, 1, 1, 1], out_classes = True)
 
-        # cmap = plt.get_cmap('hot')
-
-        # test = tf.math.multiply(cmap([0, 0.5, 1]), self.predictions)
-        # print(test.shape)
-        # print(test.dtype)
-
+        self.slider.disabled = False
+        self.toggle.disabled = False
 
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
-        texture.blit_buffer(self.frames[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
-        texture1 = Texture.create(size=(256, 256), colorfmt='rgb')
-        texture1.blit_buffer(self.frames[250].flatten(), colorfmt='rgb', bufferfmt='ubyte')
-        # with self.mri.canvas:
-        #     self.mri.canvas.clear()
-        #     Color(1., 1, 1, 1)
-        #     Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,)
-
-
+        texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
         with self.mri.canvas:
             self.mri.canvas.clear()
-            Color(1, 1, 1, 1)   # red colour
+            Color(1, 1, 1, 1)  
             Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,)
 
+    def Plotter(self, *args):
+
+        frame = int(self.slider.value)
+
+        texture = Texture.create(size=(256, 256), colorfmt='rgb')
+        texture.blit_buffer(self.plot_mri[frame].flatten(), colorfmt='rgb', bufferfmt='ubyte')
+        textureBK = Texture.create(size=(256, 256), colorfmt='rgba')
+        textureBK.blit_buffer(self.predictions[frame,:,:,0,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
+        textureUL = Texture.create(size=(256, 256), colorfmt='rgba')
+        textureUL.blit_buffer(self.predictions[frame,:,:,1,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
+        textureHP = Texture.create(size=(256, 256), colorfmt='rgba')
+        textureHP.blit_buffer(self.predictions[frame,:,:,2,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
+        textureSP = Texture.create(size=(256, 256), colorfmt='rgba')
+        textureSP.blit_buffer(self.predictions[frame,:,:,3,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
+        textureTO = Texture.create(size=(256, 256), colorfmt='rgba')
+        textureTO.blit_buffer(self.predictions[frame,:,:,4,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
+        textureLL = Texture.create(size=(256, 256), colorfmt='rgba')
+        textureLL.blit_buffer(self.predictions[frame,:,:,5,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
+        textureHE = Texture.create(size=(256, 256), colorfmt='rgba')
+        textureHE.blit_buffer(self.predictions[frame,:,:,6,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
+
         with self.mri.canvas:
             self.mri.canvas.clear()
-            Color(0.5, 1, 1, 0.5)   # black colour
-            Rectangle(texture=texture1, pos=self.mri.pos, size=self.mri.size,)
+            Color(1, 1, 1, 1)  
+            Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,)
+            if self.bk.state == 'down' : 
+                Color(0.5, 1, 1, 0.3)
+                Rectangle(texture=textureBK, pos=self.mri.pos, size=self.mri.size,)
+            else:
+                Color(1,1,1,0)
+            if self.ul.state == 'down': 
+                Color(1, 0.5, 1, 0.3)
+                Rectangle(texture=textureUL, pos=self.mri.pos, size=self.mri.size,)
+            else:
+                Color(1,1,1,0)
+            if self.hp.state == 'down': 
+                Color(1, 1, 0.5, 0.3)
+                Rectangle(texture=textureHP, pos=self.mri.pos, size=self.mri.size,)
+            else:
+                Color(1,1,1,0)
+            if self.sp.state == 'down': 
+                Color(0.5, 1, 0.5, 0.3)
+                Rectangle(texture=textureSP, pos=self.mri.pos, size=self.mri.size,)
+            else:
+                Color(1,1,1,0)
+            if self.to.state == 'down': 
+                Color(0.5, 0.5, 1, 0.3)
+                Rectangle(texture=textureTO, pos=self.mri.pos, size=self.mri.size,)
+            else:
+                Color(1,1,1,0)
+            if self.ll.state == 'down': 
+                Color(1, 0.5, 0.5, 0.3)
+                Rectangle(texture=textureLL, pos=self.mri.pos, size=self.mri.size,)
+            else:
+                Color(1,1,1,0)
+            if self.he.state == 'down': 
+                Color(0.7, 1, 0.7, 0.3)
+                Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,)
+            else:
+                Color(1,1,1,0)
+            
+                    
 
-        # self.add_widget(self.mri)
-        # self.add_widget(self.fl)
+
   
-    def prediction_recomposition(self, prediction, out_classes = False):
-        if len(prediction.shape) == 4:
+    def prediction_recomposition(self, prediction, rgba, out_classes):
+
+        if len(prediction.shape) == 4 and out_classes == False:
             voxel = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2]])
 
             voxel = tf.math.argmax(prediction, axis = 3)
             voxel = tf.where(tf.equal(voxel, 0), tf.ones_like(voxel)*7, voxel)
             voxel = tf.expand_dims(voxel, 3)
 
-        elif len(prediction.shape) == 3:
+        elif len(prediction.shape) == 3 and out_classes == False:
             voxel = np.zeros([prediction.shape[0],prediction.shape[1]])
 
             voxel = tf.math.argmax(prediction, axis = 2)
             voxel = tf.where(tf.equal(voxel, 0), tf.ones_like(voxel)*7, voxel)
         
-        if len(prediction.shape) == 4 and out_classes == True:
+        elif len(prediction.shape) == 4 and out_classes == True:
+            print('ok')
             voxel_p = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2], prediction.shape[3]])
-            voxel = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2], prediction.shape[3]], dtype = np.uint8)
+            voxel = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2], prediction.shape[3]])
+            voxel_rgba = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2], prediction.shape[3], 4], np.uint8)
 
             voxel_p = tf.math.argmax(prediction, axis = 3)
             voxel_p = tf.where(tf.equal(voxel_p, 0), tf.ones_like(voxel_p)*7, voxel_p)
-            voxel[:,:,:,0] = tf.where(tf.equal(voxel_p, 7), tf.ones_like(voxel_p), voxel[:,:,:,0])
-            voxel[:,:,:,1] = tf.where(tf.equal(voxel_p, 1), tf.ones_like(voxel_p), voxel[:,:,:,1])
-            voxel[:,:,:,2] = tf.where(tf.equal(voxel_p, 2), tf.ones_like(voxel_p), voxel[:,:,:,2])
-            voxel[:,:,:,3] = tf.where(tf.equal(voxel_p, 3), tf.ones_like(voxel_p), voxel[:,:,:,3])
-            voxel[:,:,:,4] = tf.where(tf.equal(voxel_p, 4), tf.ones_like(voxel_p), voxel[:,:,:,4])
-            voxel[:,:,:,5] = tf.where(tf.equal(voxel_p, 5), tf.ones_like(voxel_p), voxel[:,:,:,5])
-            voxel[:,:,:,6] = tf.where(tf.equal(voxel_p, 6), tf.ones_like(voxel_p), voxel[:,:,:,6])
+            voxel[:,:,:,0] = tf.where(tf.equal(voxel_p, 7), tf.ones_like(voxel_p)*255, voxel[:,:,:,0])
+            voxel[:,:,:,1] = tf.where(tf.equal(voxel_p, 1), tf.ones_like(voxel_p)*255, voxel[:,:,:,1])
+            voxel[:,:,:,2] = tf.where(tf.equal(voxel_p, 2), tf.ones_like(voxel_p)*255, voxel[:,:,:,2])
+            voxel[:,:,:,3] = tf.where(tf.equal(voxel_p, 3), tf.ones_like(voxel_p)*255, voxel[:,:,:,3])
+            voxel[:,:,:,4] = tf.where(tf.equal(voxel_p, 4), tf.ones_like(voxel_p)*255, voxel[:,:,:,4])
+            voxel[:,:,:,5] = tf.where(tf.equal(voxel_p, 5), tf.ones_like(voxel_p)*255, voxel[:,:,:,5])
+            voxel[:,:,:,6] = tf.where(tf.equal(voxel_p, 6), tf.ones_like(voxel_p)*255, voxel[:,:,:,6])
 
-        return voxel
+
+            voxel_rgba[:,:,:,0,0] = voxel[:,:,:,0]*rgba[0]
+            voxel_rgba[:,:,:,0,1] = voxel[:,:,:,0]*rgba[1]
+            voxel_rgba[:,:,:,0,2] = voxel[:,:,:,0]*rgba[2]
+            voxel_rgba[:,:,:,0,3] = voxel[:,:,:,0]*rgba[3]
+            voxel_rgba[:,:,:,1,0] = voxel[:,:,:,1]*rgba[0]
+            voxel_rgba[:,:,:,1,1] = voxel[:,:,:,1]*rgba[1]
+            voxel_rgba[:,:,:,1,2] = voxel[:,:,:,1]*rgba[2]
+            voxel_rgba[:,:,:,1,3] = voxel[:,:,:,1]*rgba[3]
+            voxel_rgba[:,:,:,2,0] = voxel[:,:,:,2]*rgba[0]
+            voxel_rgba[:,:,:,2,1] = voxel[:,:,:,2]*rgba[1]
+            voxel_rgba[:,:,:,2,2] = voxel[:,:,:,2]*rgba[2]
+            voxel_rgba[:,:,:,2,3] = voxel[:,:,:,2]*rgba[3]
+            voxel_rgba[:,:,:,3,0] = voxel[:,:,:,3]*rgba[0]
+            voxel_rgba[:,:,:,3,1] = voxel[:,:,:,3]*rgba[1]
+            voxel_rgba[:,:,:,3,2] = voxel[:,:,:,3]*rgba[2]
+            voxel_rgba[:,:,:,3,3] = voxel[:,:,:,3]*rgba[3]            
+            voxel_rgba[:,:,:,4,0] = voxel[:,:,:,4]*rgba[0]
+            voxel_rgba[:,:,:,4,1] = voxel[:,:,:,4]*rgba[1]
+            voxel_rgba[:,:,:,4,2] = voxel[:,:,:,4]*rgba[2]
+            voxel_rgba[:,:,:,4,3] = voxel[:,:,:,4]*rgba[3]
+            voxel_rgba[:,:,:,5,0] = voxel[:,:,:,5]*rgba[0]
+            voxel_rgba[:,:,:,5,1] = voxel[:,:,:,5]*rgba[1]
+            voxel_rgba[:,:,:,5,2] = voxel[:,:,:,5]*rgba[2]
+            voxel_rgba[:,:,:,5,3] = voxel[:,:,:,5]*rgba[3]
+            voxel_rgba[:,:,:,6,0] = voxel[:,:,:,6]*rgba[0]
+            voxel_rgba[:,:,:,6,1] = voxel[:,:,:,6]*rgba[1]
+            voxel_rgba[:,:,:,6,2] = voxel[:,:,:,6]*rgba[2]
+            voxel_rgba[:,:,:,6,3] = voxel[:,:,:,6]*rgba[3]
+
+            voxel_rgba = np.rot90(voxel_rgba, 2)
+
+        return voxel_rgba
 
 
     

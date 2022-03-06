@@ -16,6 +16,14 @@
     mri: _mri
     mainbx: _mainbx
     slider: _slider
+    bk: _BK
+    ul: _UL
+    hp: _HP
+    sp: _SP
+    to: _TO
+    ll: _LL
+    he: _HE
+    toggle: _toggle
 
 
     BoxLayout:                          #connection part
@@ -23,10 +31,12 @@
         size_hint: (.5,1)
         orientation: "vertical"
         BoxLayout: 
-            spacing:5
+            spacing: 15
             size_hint: (1,.2)      
             orientation:"vertical"
             BoxLayout:
+                spacing: 5
+                size_hint:(1,0.3)
                 orientation:"vertical"              
                 Spinner:
                     id: _sbj
@@ -39,7 +49,6 @@
                     on_press: self.press = True
                     on_text: self.click = True
                 
-
                 Spinner:
                     id: _sbjtask
                     text: "Available Task"
@@ -52,15 +61,60 @@
                     on_text: self.click = True
                     on_press: self.press = True
 
+            BoxLayout:
+                spacing: 5
+                size_hint:(1,0.5)
+                orientation:"vertical" 
+                Button:
+                    id: _pred
+                    text: "Predict"
+                    text_size: self.size
+                    halign: "center"
+                    valign: "center"
+                    disabled: True
+                    on_press: root.Prediction()
 
-            Button:
-                id: _pred
-                text: "Predict"
-                text_size: self.size
-                halign: "center"
-                valign: "center"
+            BoxLayout:
+                id: _toggle
+                spacing: 5
+                orientation:"vertical"
                 disabled: True
-                on_press: root.Prediction()
+                ToggleButton:
+                    id: _BK
+                    text: 'BK'
+                    state: 'normal'
+                    on_press: root.Plotter()
+                ToggleButton:
+                    id: _UL
+                    text: 'UL'
+                    state: 'normal'
+                    on_press: root.Plotter()
+                ToggleButton:
+                    id: _HP
+                    text: 'HP'
+                    state: 'normal'
+                    on_press: root.Plotter()
+                ToggleButton:
+                    id: _SP
+                    text: 'SP'
+                    state: 'normal'
+                    on_press: root.Plotter()
+                ToggleButton:
+                    id: _TO
+                    text: 'TO'
+                    state: 'normal'
+                    on_press: root.Plotter()
+                ToggleButton:
+                    id: _LL
+                    text: 'LL'
+                    state: 'normal'
+                    on_press: root.Plotter()
+                ToggleButton:
+                    id: _HE
+                    text: 'HE'
+                    state: 'normal'
+                    on_press: root.Plotter()
+
 
 
     BoxLayout:                          #data visualization
@@ -106,13 +160,13 @@
             size_hint:(1,.1)
             Slider:
                 id: _slider
-                min: 0
-                max: 355
                 step: 1
                 orientation: 'horizontal'
+                disabled: True
+                on_value: root.Plotter()
             Label:
                 size_hint:(0.20,1)
-                text: str(_slider.value)
+                text: str(int(_slider.value))
 
         
 
