@@ -14,6 +14,8 @@
     pred: _pred
     msg: _msg
     mri: _mri
+    mainbx: _mainbx
+    slider: _slider
 
 
     BoxLayout:                          #connection part
@@ -63,13 +65,14 @@
 
     BoxLayout:                          #data visualization
         orientation:"vertical"
+        size_hint:(1,1)
         spacing: 5
         id: _mainbx
         rect_image: self.rect_image
         BoxLayout:
             orientation: "horizontal"
             padding: (0,0)
-            size_hint:(1,.20)
+            size_hint:(1,.1)
             ScrollView:
                 spacing: 5
                 size_hint:(1,1)
@@ -94,7 +97,24 @@
             orientation: "horizontal"
             padding: 5
             spacing:5
+            size: (256,256)
             canvas.before:
+
+        BoxLayout:
+            orientation: "horizontal"
+            padding: (0,0)
+            size_hint:(1,.1)
+            Slider:
+                id: _slider
+                min: 0
+                max: 355
+                step: 1
+                orientation: 'horizontal'
+            Label:
+                size_hint:(0.20,1)
+                text: str(_slider.value)
+
+        
 
 
 
