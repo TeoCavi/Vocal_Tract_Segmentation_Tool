@@ -107,7 +107,7 @@ class Home (BoxLayout):
         frames = []
         check = True
         i = 0
-        images_to_keep = 3  #all is 354
+        images_to_keep = 354  #all is 354
         step = int((frameCount-1)/images_to_keep)
         step_i = step
         self.msg.text = 'I am extracting frames...'
@@ -150,7 +150,7 @@ class Home (BoxLayout):
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
         texture.blit_buffer(self.frames[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
         texture1 = Texture.create(size=(256, 256), colorfmt='rgb')
-        texture1.blit_buffer(self.frames[2].flatten(), colorfmt='rgb', bufferfmt='ubyte')
+        texture1.blit_buffer(self.frames[250].flatten(), colorfmt='rgb', bufferfmt='ubyte')
         # with self.mri.canvas:
         #     self.mri.canvas.clear()
         #     Color(1., 1, 1, 1)
