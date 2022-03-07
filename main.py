@@ -1,4 +1,3 @@
-#%%
 from turtle import color, home
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -15,13 +14,13 @@ from kivy.uix.label import Label
 from kivy.graphics import Color
 from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
-from kivy.graphics import Rectangle
+from kivy.graphics import Rectangle, Line, Ellipse
 from kivy.properties import ObjectProperty
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.spinner import Spinner
-from kivy.uix.slider import Slider
 from kivy.clock import Clock
+from kivy.uix.widget import Widget
 from kivy_garden.graph import Graph, LinePlot
 from kivy.config import Config
 
@@ -30,22 +29,81 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #decommentare per escludere la GPU
 print(device_lib.list_local_devices())
-# cap = cv2.VideoCapture(r'C:\Users\matte\Videos\GOPR1095 slow.avi', ) # video salvato in cap
-# frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-# frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) #larghezza immagine in pixel
-# frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) #altezza immagine in pixel
-# print(frameCount)
-# print(frameWidth)
 
 
-class ColLabel(Label):
-    pass
+# class CustomTouchMixin(object):
+#   def __init__(self, *args, **kwargs):
+#     super(CustomTouchMixin, self).__init__(*args, **kwargs)
+#     self.register_event_type("on_really_touch_down")
+
+#   def on_really_touch_down(self, touch):
+#       self.x = touch.x
+#       self.y = touch.y
+
+# class CustomTouchWidgetMixin(CustomTouchMixin):
+#   def on_touch_down(self, touch):
+#     if self.collide_point(*touch.pos):
+#       self.dispatch("on_really_touch_down", touch)
+#     return super(CustomTouchWidgetMixin, self).on_touch_down(touch)
+
+# class CustomTouchLayoutMixin(CustomTouchMixin):
+#   def on_touch_down(self, touch):
+#     for child in self.walk():
+#       if child is self: continue
+#       if child.collide_point(*touch.pos):
+#         # let the touch propagate to children
+#         return super(CustomTouchLayoutMixin, self).on_touch_down(touch)
+#     else:
+#       super(CustomTouchLayoutMixin, self).dispatch("on_really_touch_down", touch)
+#       return True
+
+# class TouchHandlerBoxLayout(CustomTouchLayoutMixin, BoxLayout):
+#     pass
+
+
+# class My_Widget(Widget):
+#     def on_touch_down(self, touch):
+#         with self.canvas.after:
+#             d = 2
+#             if self.state == 0:
+#                 Ellipse(size = (d,d), pos = (touch.x-d/2, touch.y-d/2))
+#                 self.x0 = touch.x-d/2
+#                 self.y0 = touch.y-d/2 
+#                 self.state = 1
+#             elif self.state == 1:
+#                 print(self.x0)
+#                 Line(poins = (self.x0, self.y0, touch.x-d/2, touch.y-d/2), width = 2, cap = 'round' )
+#                 self.state = 0
+
+
+class DrawScreen(BoxLayout):
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self.x0 = touch.x
+            self.y0 = touch.y
+            self.check = True
+        else:
+            self.check = False
+
+        # if touch.is_mouse_scrolling:
+        #     if touch.button == 'scrolldown':
+        #         if self.scale < 10:
+        #             self.scale = self.scale * 1.1
+        #     elif touch.button == 'scrollup':
+        #         if self.scale > 1:
+        #             self.scale = self.scale * 0.8
+    
+        return super(DrawScreen, self).on_touch_down(touch)
+    
+    def on_touch_up(self, touch):
+        self.check = False
+        return super().on_touch_up(touch)
 
 class Home (BoxLayout):
     
-    Config.set('graphics', 'width', '1400')
-    Config.set('graphics', 'height', '1000')
+    Config.set('graphics', 'width', '1200')
+    Config.set('graphics', 'height', '800')
+    #Config.set('graphics', 'position', 'auto')
     Config.write()
     sbj=ObjectProperty()
     sbjtask=ObjectProperty()
@@ -66,18 +124,25 @@ class Home (BoxLayout):
 
         if self.sbj.press == True:
             self.msg.text = 'Select one subject'
-            self.sbj.text = 'Subject'
+            self.sbj.text = ''
             self.sbj.click = False
-            self.sbjtask.text = "Available Task"
+            self.sbjtask.text = ""
             self.sbjtask.click = False
-            self.pred.disabled = self.sbjtask.disabled =True
+            self.mri.canvas.after.clear()
+            self.mri.canvas.before.clear()
+            self.pred.disabled = self.sbjtask.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
+            self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
             self.sbj.press = False
+            self.toggle.disabled
 
         if self.sbjtask.press == True:
             self.msg.text = 'Select one task for ' + self.sbj.text
-            self.sbjtask.text = "Available Task"
+            self.sbjtask.text = ""
             self.sbjtask.click = False
-            self.pred.disabled = True
+            self.mri.canvas.after.clear()
+            self.mri.canvas.before.clear()
+            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
+            self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
             self.sbjtask.press = False
             
         if self.sbj.click == True:
@@ -110,7 +175,7 @@ class Home (BoxLayout):
         frames = []
         check = True
         i = 0
-        images_to_keep = 354  #all is 354
+        images_to_keep = 5  #all is 354
         self.slider.max = images_to_keep-1
         self.slider.min = 0
         step = int((frameCount-1)/images_to_keep)
@@ -142,22 +207,21 @@ class Home (BoxLayout):
         model = tf.keras.models.load_model(os.path.join(model_path, model_name), compile = False)
 
         self.predictions = model.predict(self.image)
-        print(self.predictions.shape)
-
         self.predictions = Home().prediction_recomposition(self.predictions, rgba = [1, 1, 1, 1], out_classes = True)
 
         self.slider.disabled = False
         self.toggle.disabled = False
+        self.mri.disabled = False
 
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
         texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
-        with self.mri.canvas:
+        with self.mri.canvas.before:
             self.mri.canvas.clear()
             Color(1, 1, 1, 1)  
             Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,)
 
-    def Plotter(self, *args):
-
+    def Plotter(self, clear, *args):
+        
         frame = int(self.slider.value)
 
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
@@ -177,50 +241,56 @@ class Home (BoxLayout):
         textureHE = Texture.create(size=(256, 256), colorfmt='rgba')
         textureHE.blit_buffer(self.predictions[frame,:,:,6,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
 
-        with self.mri.canvas:
-            self.mri.canvas.clear()
+        with self.mri.canvas.before:
+            if clear == True:
+                self.mri.canvas.after.clear()
+                self.mri.canvas.before.clear()
+
             Color(1, 1, 1, 1)  
             Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,)
             if self.bk.state == 'down' : 
                 Color(0.5, 1, 1, 0.3)
                 Rectangle(texture=textureBK, pos=self.mri.pos, size=self.mri.size,)
-            else:
-                Color(1,1,1,0)
             if self.ul.state == 'down': 
                 Color(1, 0.5, 1, 0.3)
-                Rectangle(texture=textureUL, pos=self.mri.pos, size=self.mri.size,)
-            else:
-                Color(1,1,1,0)
+                self.RUL = Rectangle(texture=textureUL, pos=self.mri.pos, size=self.mri.size,)
             if self.hp.state == 'down': 
                 Color(1, 1, 0.5, 0.3)
                 Rectangle(texture=textureHP, pos=self.mri.pos, size=self.mri.size,)
-            else:
-                Color(1,1,1,0)
             if self.sp.state == 'down': 
                 Color(0.5, 1, 0.5, 0.3)
                 Rectangle(texture=textureSP, pos=self.mri.pos, size=self.mri.size,)
-            else:
-                Color(1,1,1,0)
             if self.to.state == 'down': 
                 Color(0.5, 0.5, 1, 0.3)
                 Rectangle(texture=textureTO, pos=self.mri.pos, size=self.mri.size,)
-            else:
-                Color(1,1,1,0)
             if self.ll.state == 'down': 
                 Color(1, 0.5, 0.5, 0.3)
                 Rectangle(texture=textureLL, pos=self.mri.pos, size=self.mri.size,)
-            else:
-                Color(1,1,1,0)
             if self.he.state == 'down': 
                 Color(0.7, 1, 0.7, 0.3)
                 Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,)
-            else:
-                Color(1,1,1,0)
-            
-                    
+        
+        #print(self.boxdim.size)
 
-
-  
+    def Draw(self, *args):
+        print('-------------')
+        print(self.mri.x0)
+        print(self.mri.y0)
+        print(self.mri.check)
+        print('-------------')
+        with self.mri.canvas.after:
+            d = 2
+            if self.mri.state == 0:
+                Color(1,1,1,1)
+                Ellipse(size = (d,d), pos = (self.mri.x0-d/2, self.mri.y0-d/2))
+                self.mri.x1 = self.mri.x0
+                self.mri.y1 = self.mri.y0
+                self.mri.state = 1
+            elif self.mri.state == 1:
+                Color(1,1,1,1)
+                Line(points = [self.mri.x1, self.mri.y1, self.mri.x0, self.mri.y0], width = 2)
+                self.mri.state = 0
+                   
     def prediction_recomposition(self, prediction, rgba, out_classes):
 
         if len(prediction.shape) == 4 and out_classes == False:

@@ -1,3 +1,5 @@
+<My_widget>:
+
 <Home>:
     canvas.before:
         Color:
@@ -16,14 +18,15 @@
     mri: _mri
     mainbx: _mainbx
     slider: _slider
-    bk: _BK
-    ul: _UL
-    hp: _HP
-    sp: _SP
-    to: _TO
-    ll: _LL
-    he: _HE
+    bk: _bk
+    ul: _ul
+    hp: _hp
+    sp: _sp
+    to: _to
+    ll: _ll
+    he: _he
     toggle: _toggle
+    model: _model
 
 
     BoxLayout:                          #connection part
@@ -37,34 +40,60 @@
             BoxLayout:
                 spacing: 5
                 size_hint:(1,0.3)
-                orientation:"vertical"              
-                Spinner:
-                    id: _sbj
-                    text: "Subject"
-                    text_size: self.size
-                    halign: "center"
-                    valign: "center"
-                    click: False
-                    press: False
-                    on_press: self.press = True
-                    on_text: self.click = True
-                
-                Spinner:
-                    id: _sbjtask
-                    text: "Available Task"
-                    text_size: self.size
-                    halign: "center"
-                    valign: "center"
-                    disabled: True
-                    click: False
-                    press: False
-                    on_text: self.click = True
-                    on_press: self.press = True
+                orientation:"vertical"
+                BoxLayout:
+                    orientation:"horizontal"
+                    Label:
+                        size_hint: (0.4, 1)
+                        text: "Subject:"            
+                    Spinner:
+                        id: _sbj
+                        text:
+                        text_size: self.size
+                        halign: "center"
+                        valign: "center"
+                        click: False
+                        press: False
+                        on_press: self.press = True
+                        on_text: self.click = True
+                BoxLayout:
+                    orientation:"horizontal"
+                    Label:
+                        size_hint: (0.4, 1)
+                        text: "Task:"
+                    Spinner:
+                        id: _sbjtask
+                        text: 
+                        text_size: self.size
+                        halign: "center"
+                        valign: "center"
+                        disabled: True
+                        click: False
+                        press: False
+                        on_text: self.click = True
+                        on_press: self.press = True
 
             BoxLayout:
                 spacing: 5
-                size_hint:(1,0.5)
-                orientation:"vertical" 
+                size_hint:(1,.3)
+                orientation:"vertical"
+                BoxLayout:
+                    orientation:"horizontal"
+                    Label:
+                        size_hint: (0.4, 1)
+                        text: "Model:"
+                    Spinner:
+                        id: _model
+                        text: 
+                        text_size: self.size
+                        halign: "center"
+                        valign: "center"
+                        disabled: True
+                        click: False
+                        press: False
+                        on_text: self.click = True
+                        on_press: self.press = True
+
                 Button:
                     id: _pred
                     text: "Predict"
@@ -80,40 +109,40 @@
                 orientation:"vertical"
                 disabled: True
                 ToggleButton:
-                    id: _BK
+                    id: _bk
                     text: 'BK'
                     state: 'normal'
-                    on_press: root.Plotter()
+                    on_press: root.Plotter(clear = False)
                 ToggleButton:
-                    id: _UL
+                    id: _ul
                     text: 'UL'
                     state: 'normal'
-                    on_press: root.Plotter()
+                    on_press: root.Plotter(clear = False)
                 ToggleButton:
-                    id: _HP
+                    id: _hp
                     text: 'HP'
                     state: 'normal'
-                    on_press: root.Plotter()
+                    on_press: root.Plotter(clear = False)
                 ToggleButton:
-                    id: _SP
+                    id: _sp
                     text: 'SP'
                     state: 'normal'
-                    on_press: root.Plotter()
+                    on_press: root.Plotter(clear = False)
                 ToggleButton:
-                    id: _TO
+                    id: _to
                     text: 'TO'
                     state: 'normal'
-                    on_press: root.Plotter()
+                    on_press: root.Plotter(clear = False)
                 ToggleButton:
-                    id: _LL
+                    id: _ll
                     text: 'LL'
                     state: 'normal'
-                    on_press: root.Plotter()
+                    on_press: root.Plotter(clear = False)
                 ToggleButton:
-                    id: _HE
+                    id: _he
                     text: 'HE'
                     state: 'normal'
-                    on_press: root.Plotter()
+                    on_press: root.Plotter(clear = False)
 
 
 
@@ -146,13 +175,21 @@
                     font_size:20
                     size_hint_y: None
                     height: self.texture_size[1]
-        BoxLayout:
+        DrawScreen:
             id: _mri
+            disabled: True
+            size_hint: (1,1)
+            pos: self.pos
+            state: 0
+            check: False
+            x0: 0
+            y0: 0
+            x1: 0
+            y1: 0
             orientation: "horizontal"
-            padding: 5
+            padding:5
             spacing:5
-            size: (256,256)
-            canvas.before:
+            on_touch_up: if self.disabled == False and self.check == True: root.Draw()
 
         BoxLayout:
             orientation: "horizontal"
@@ -163,7 +200,7 @@
                 step: 1
                 orientation: 'horizontal'
                 disabled: True
-                on_value: root.Plotter()
+                on_value: root.Plotter(clear = True)
             Label:
                 size_hint:(0.20,1)
                 text: str(int(_slider.value))
