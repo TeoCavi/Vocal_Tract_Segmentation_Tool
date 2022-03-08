@@ -1,4 +1,8 @@
-<My_widget>:
+<PlayButton@Button>:
+    background_color: (1,1,1,1)
+    background_normal: ''
+
+
 
 <Home>:
     canvas.before:
@@ -27,6 +31,7 @@
     he: _he
     toggle: _toggle
     model: _model
+    play: _play
 
 
     BoxLayout:                          #connection part
@@ -63,7 +68,7 @@
                         text: "Task:"
                     Spinner:
                         id: _sbjtask
-                        text: 
+                        text:
                         text_size: self.size
                         halign: "center"
                         valign: "center"
@@ -84,7 +89,7 @@
                         text: "Model:"
                     Spinner:
                         id: _model
-                        text: 
+                        text:
                         text_size: self.size
                         halign: "center"
                         valign: "center"
@@ -155,7 +160,7 @@
         BoxLayout:
             orientation: "horizontal"
             padding: (0,0)
-            size_hint:(1,.1)
+            size_hint:(1,.07)
             ScrollView:
                 spacing: 5
                 size_hint:(1,1)
@@ -175,10 +180,13 @@
                     font_size:20
                     size_hint_y: None
                     height: self.texture_size[1]
+                    halign: 'left'
+                    valign: 'middle'
         DrawScreen:
             id: _mri
             disabled: True
-            size_hint: (1,1)
+            size_hint: (1,1.1)
+            size: self.size
             pos: self.pos
             state: 0
             check: False
@@ -194,7 +202,21 @@
         BoxLayout:
             orientation: "horizontal"
             padding: (0,0)
-            size_hint:(1,.1)
+            size_hint:(1,.05)
+            BoxLayout:
+                size: self.size
+                size_hint:(0.05,1)
+                pos: self.pos
+                padding: 5
+                PlayButton:
+                    id: _play
+                    pos: self.pos
+                    size: self.size
+                    canvas.after:
+                        Color:
+                            rgba: 1,1,0,0
+                        Triangle:
+                            points: (_play.y, _play.height, _play.width, _play.center_y, _play.width, _play.height)
             Slider:
                 id: _slider
                 step: 1

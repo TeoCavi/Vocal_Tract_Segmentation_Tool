@@ -24,57 +24,10 @@ from kivy.uix.widget import Widget
 from kivy_garden.graph import Graph, LinePlot
 from kivy.config import Config
 
-
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #decommentare per escludere la GPU
 print(device_lib.list_local_devices())
-
-
-# class CustomTouchMixin(object):
-#   def __init__(self, *args, **kwargs):
-#     super(CustomTouchMixin, self).__init__(*args, **kwargs)
-#     self.register_event_type("on_really_touch_down")
-
-#   def on_really_touch_down(self, touch):
-#       self.x = touch.x
-#       self.y = touch.y
-
-# class CustomTouchWidgetMixin(CustomTouchMixin):
-#   def on_touch_down(self, touch):
-#     if self.collide_point(*touch.pos):
-#       self.dispatch("on_really_touch_down", touch)
-#     return super(CustomTouchWidgetMixin, self).on_touch_down(touch)
-
-# class CustomTouchLayoutMixin(CustomTouchMixin):
-#   def on_touch_down(self, touch):
-#     for child in self.walk():
-#       if child is self: continue
-#       if child.collide_point(*touch.pos):
-#         # let the touch propagate to children
-#         return super(CustomTouchLayoutMixin, self).on_touch_down(touch)
-#     else:
-#       super(CustomTouchLayoutMixin, self).dispatch("on_really_touch_down", touch)
-#       return True
-
-# class TouchHandlerBoxLayout(CustomTouchLayoutMixin, BoxLayout):
-#     pass
-
-
-# class My_Widget(Widget):
-#     def on_touch_down(self, touch):
-#         with self.canvas.after:
-#             d = 2
-#             if self.state == 0:
-#                 Ellipse(size = (d,d), pos = (touch.x-d/2, touch.y-d/2))
-#                 self.x0 = touch.x-d/2
-#                 self.y0 = touch.y-d/2 
-#                 self.state = 1
-#             elif self.state == 1:
-#                 print(self.x0)
-#                 Line(poins = (self.x0, self.y0, touch.x-d/2, touch.y-d/2), width = 2, cap = 'round' )
-#                 self.state = 0
-
 
 class DrawScreen(BoxLayout):
     def on_touch_down(self, touch):
@@ -123,27 +76,41 @@ class Home (BoxLayout):
         self.sbj.values = sbj
 
         if self.sbj.press == True:
-            self.msg.text = 'Select one subject'
+            self.msg.text = 'Select one Subject'
             self.sbj.text = ''
-            self.sbj.click = False
             self.sbjtask.text = ""
             self.sbjtask.click = False
+            self.sbj.click = False
+            self.model.click = False
             self.mri.canvas.after.clear()
             self.mri.canvas.before.clear()
-            self.pred.disabled = self.sbjtask.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
+            self.pred.disabled = self.sbjtask.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = True
             self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
             self.sbj.press = False
             self.toggle.disabled
 
         if self.sbjtask.press == True:
-            self.msg.text = 'Select one task for ' + self.sbj.text
+            self.msg.text = 'Select one Task for ' + self.sbj.text
             self.sbjtask.text = ""
             self.sbjtask.click = False
+            self.model.click = False
+            self.mri.canvas.after.clear()
+            self.mri.canvas.before.clear()
+            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = True
+            self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+            self.sbjtask.press = False
+            self.toggle.disabled
+
+        if self.model.press == True:
+            self.msg.text = 'Select one Model for prediction'
+            self.model.text = ""
+            self.model.click = False
             self.mri.canvas.after.clear()
             self.mri.canvas.before.clear()
             self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
             self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
-            self.sbjtask.press = False
+            self.model.press = False
+            self.toggle.disabled
             
         if self.sbj.click == True:
             self.taskdir = os.path.join(video_path, self.sbj.text)
@@ -153,20 +120,64 @@ class Home (BoxLayout):
             self.msg.text = 'Select one task for ' + self.sbj.text
         
         if self.sbjtask.click == True:
-            self.pred.disabled = False
-            self.msg.text = 'Click on Predict button to start vocal tract segmentation'
+            self.model.disabled = False
             fnames = os.listdir(os.path.join(self.taskdir, self.sbjtask.text ))
             self.fname = ''
             for file in fnames:
                 if file.endswith(".avi"):
                     self.fname = file
+
+            models = os.listdir(model_path)
+
+            self.model.values = models
             
             self.fdir = os.path.join(self.taskdir, self.sbjtask.text)
+            self.msg.text = 'Select one model for prediction'
+
+        
+        if self.model.click == True:
+            self.pred.disabled = False
+            self.pred_model =  self.model.text
+            self.msg.text = 'Click on Predict to start Vocal Tract Segmentation'
+
+        if self.mri.disabled == False and self.initial_dim != self.size:
+            #Update is to remove blocking functions
+            for el in self.image_set:
+                el.pos = self.mri.pos
+                el.size = self.mri.size
+            
+
+            if self.check_distances == True:
+
+                print(self.initial_dim)
+                print(self.size)
+                print(self.size[0])
+                print(self.initial_dim[0])
+                stretch = (self.size[0]/self.initial_dim[0], self.size[1]/self.initial_dim[1])
+                print(self.initial_pos)
+                print(self.mri.pos)
+                # delta = [self.initial_pos[0]-self.mri.pos[0], self.initial_pos[1]-self.mri.pos[1]]
+                # print(delta)
+                num = 0
+                for ds in self.distances:
+                    if (num % 2) == 0: #Ellipses
+                        print(ds.pos)
+                        ds.pos = (ds.pos[0]*stretch[0], ds.pos[1]*stretch[1])
+                        print(ds.pos)
+                    else:
+                        print('before',ds.points)
+                        ds.points = (ds.points[0]*stretch[0], ds.points[1]*stretch[1], ds.points[2]*stretch[0], ds.points[3]*stretch[1])
+                        ds.width = ds.width*stretch[1]
+                        print('after', ds.points)
+                    num = num + 1
+            
+            self.initial_dim = self.size.copy()
 
     def Prediction(self, *args):
         self.slider.value = 0.0
         self.msg.text = 'I am loading ' + self.sbj.text + ' video...'
         self.sbjtask.click = False
+        self.model.click = False
         self.sbj.click = False
         name = 's_' + os.path.splitext(self.fname)[0] #salva in name solo il nome del video (senza l'estensione .avi)
         dataset_dir = os.path.join(dir_path, 'Dataset')
@@ -203,7 +214,7 @@ class Home (BoxLayout):
         self.image /= (ub - lb)
         self.image = np.expand_dims(self.image, 3)
 
-        model_name = 'IMUNetAtt_DiceCEFocalTopK_20220122-093857.h5'
+        model_name = self.pred_model #'IMUNetAtt_DiceCEFocalTopK_20220122-093857.h5'
         model = tf.keras.models.load_model(os.path.join(model_path, model_name), compile = False)
 
         self.predictions = model.predict(self.image)
@@ -213,15 +224,22 @@ class Home (BoxLayout):
         self.toggle.disabled = False
         self.mri.disabled = False
 
+        self.image_set = []
+        self.distances = []
+        self.initial_dim = 0
+        self.check_distances = False
+
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
         texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
         with self.mri.canvas.before:
             self.mri.canvas.clear()
             Color(1, 1, 1, 1)  
-            Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,)
+            self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
 
     def Plotter(self, clear, *args):
-        
+
+        print(self.play.size_hint)
+
         frame = int(self.slider.value)
 
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
@@ -245,51 +263,61 @@ class Home (BoxLayout):
             if clear == True:
                 self.mri.canvas.after.clear()
                 self.mri.canvas.before.clear()
+                self.image_set = []
+                self.distances = []
 
             Color(1, 1, 1, 1)  
-            Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,)
+            self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
             if self.bk.state == 'down' : 
                 Color(0.5, 1, 1, 0.3)
-                Rectangle(texture=textureBK, pos=self.mri.pos, size=self.mri.size,)
+                self.image_set.append(Rectangle(texture=textureBK, pos=self.mri.pos, size=self.mri.size,))
             if self.ul.state == 'down': 
                 Color(1, 0.5, 1, 0.3)
-                self.RUL = Rectangle(texture=textureUL, pos=self.mri.pos, size=self.mri.size,)
+                self.image_set.append(Rectangle(texture=textureUL, pos=self.mri.pos, size=self.mri.size,))
             if self.hp.state == 'down': 
                 Color(1, 1, 0.5, 0.3)
-                Rectangle(texture=textureHP, pos=self.mri.pos, size=self.mri.size,)
+                self.image_set.append(Rectangle(texture=textureHP, pos=self.mri.pos, size=self.mri.size,))
             if self.sp.state == 'down': 
                 Color(0.5, 1, 0.5, 0.3)
-                Rectangle(texture=textureSP, pos=self.mri.pos, size=self.mri.size,)
+                self.image_set.append(Rectangle(texture=textureSP, pos=self.mri.pos, size=self.mri.size,))
             if self.to.state == 'down': 
                 Color(0.5, 0.5, 1, 0.3)
-                Rectangle(texture=textureTO, pos=self.mri.pos, size=self.mri.size,)
+                self.image_set.append(Rectangle(texture=textureTO, pos=self.mri.pos, size=self.mri.size,))
             if self.ll.state == 'down': 
                 Color(1, 0.5, 0.5, 0.3)
-                Rectangle(texture=textureLL, pos=self.mri.pos, size=self.mri.size,)
+                self.image_set.append(Rectangle(texture=textureLL, pos=self.mri.pos, size=self.mri.size,))
             if self.he.state == 'down': 
                 Color(0.7, 1, 0.7, 0.3)
-                Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,)
+                self.image_set.append(Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,))
         
         #print(self.boxdim.size)
 
-    def Draw(self, *args):
+    def Draw(self, set = 1, *args):
         print('-------------')
         print(self.mri.x0)
         print(self.mri.y0)
         print(self.mri.check)
         print('-------------')
         with self.mri.canvas.after:
-            d = 2
+            self.d = 2
             if self.mri.state == 0:
+                self.initial_dim = self.size.copy()
+                self.initial_pos = self.mri.pos.copy()
+                print('a', self.initial_dim)
                 Color(1,1,1,1)
-                Ellipse(size = (d,d), pos = (self.mri.x0-d/2, self.mri.y0-d/2))
-                self.mri.x1 = self.mri.x0
-                self.mri.y1 = self.mri.y0
+                self.distances.append(Ellipse(size = (self.d,self.d), pos = (self.mri.x0 , self.mri.y0 )))
+                self.mri.x1 = self.mri.x0 
+                self.mri.y1 = self.mri.y0 
                 self.mri.state = 1
+                self.check_distances = True
             elif self.mri.state == 1:
+                if self.initial_dim != self.size:
+                    self.mri.canvas.after.remove(self.distances[-1])
+                    self.distances.pop(-1)
                 Color(1,1,1,1)
-                Line(points = [self.mri.x1, self.mri.y1, self.mri.x0, self.mri.y0], width = 2)
+                self.distances.append(Line(points = [self.mri.x1, self.mri.y1, self.mri.x0 , self.mri.y0 ], width = 1.5))
                 self.mri.state = 0
+                self.check_distances = True
                    
     def prediction_recomposition(self, prediction, rgba, out_classes):
 
@@ -356,12 +384,11 @@ class Home (BoxLayout):
 
         return voxel_rgba
 
-
     
 class VTS_ToolApp(App):
     def build(self):
         home = Home()
-        Clock.schedule_interval(home.update, 0.1)
+        Clock.schedule_interval(home.update, 0.001)
         return home
 
 if __name__ == '__main__':
