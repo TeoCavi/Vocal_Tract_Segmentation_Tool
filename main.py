@@ -217,8 +217,12 @@ class Home (BoxLayout):
         model_name = self.pred_model #'IMUNetAtt_DiceCEFocalTopK_20220122-093857.h5'
         model = tf.keras.models.load_model(os.path.join(model_path, model_name), compile = False)
 
-        self.predictions = model.predict(self.image)
+        print('Inizio predizioni')
+        self.predictions = model.predict(self.image, batch_size = 50)
+        print('fine predizioni')
+        print('inizio ricomposizione')
         self.predictions = Home().prediction_recomposition(self.predictions, rgba = [1, 1, 1, 1], out_classes = True)
+        print('fine ricomposizione')
 
         self.slider.disabled = False
         self.toggle.disabled = False

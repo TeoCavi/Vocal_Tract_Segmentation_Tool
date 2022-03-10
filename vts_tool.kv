@@ -1,9 +1,3 @@
-<PlayButton@Button>:
-    background_color: (1,1,1,1)
-    background_normal: ''
-
-
-
 <Home>:
     canvas.before:
         Color:
@@ -201,22 +195,22 @@
 
         BoxLayout:
             orientation: "horizontal"
-            padding: (0,0)
             size_hint:(1,.05)
-            BoxLayout:
+            spacing: 5
+            ToggleButton:
+                id: _play
                 size: self.size
                 size_hint:(0.05,1)
                 pos: self.pos
-                padding: 5
-                PlayButton:
-                    id: _play
-                    pos: self.pos
-                    size: self.size
-                    canvas.after:
-                        Color:
-                            rgba: 1,1,0,0
-                        Triangle:
-                            points: (_play.y, _play.height, _play.width, _play.center_y, _play.width, _play.height)
+                state: 'normal'
+                color: {'normal': (1,1,1,1), 'down': (0,1,0,1)} [self.state]
+                canvas.after:
+                    Color:
+                        rgba: 0.5, 0.5, 0.5, 1
+                    Triangle:
+                        points: self.pos[0], self.pos[1]+_play.height, self.pos[0]+_play.width, self.pos[1]+_play.height, self.pos[0]+_play.width, self.pos[1]+_play.height/2
+                    Triangle:
+                        points: self.pos[0], self.pos[1], self.pos[0]+_play.width, self.pos[1], self.pos[0]+_play.width, self.pos[1]+_play.height/2
             Slider:
                 id: _slider
                 step: 1
@@ -224,7 +218,7 @@
                 disabled: True
                 on_value: root.Plotter(clear = True)
             Label:
-                size_hint:(0.20,1)
+                size_hint:(0.1,1)
                 text: str(int(_slider.value))
 
         
