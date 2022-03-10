@@ -10,7 +10,6 @@
     orientation: "horizontal"
 
     sbj: _sbj
-    sbjtask: _sbjtask
     pred: _pred
     msg: _msg
     mri: _mri
@@ -38,39 +37,18 @@
             orientation:"vertical"
             BoxLayout:
                 spacing: 5
-                size_hint:(1,0.3)
+                size_hint:(1,0.15)
                 orientation:"vertical"
                 BoxLayout:
-                    orientation:"horizontal"
-                    Label:
-                        size_hint: (0.4, 1)
-                        text: "Subject:"            
-                    Spinner:
+                    orientation:"horizontal"           
+                    Button:
                         id: _sbj
-                        text:
+                        text: 'Select Video'
                         text_size: self.size
                         halign: "center"
                         valign: "center"
-                        click: False
-                        press: False
-                        on_press: self.press = True
-                        on_text: self.click = True
-                BoxLayout:
-                    orientation:"horizontal"
-                    Label:
-                        size_hint: (0.4, 1)
-                        text: "Task:"
-                    Spinner:
-                        id: _sbjtask
-                        text:
-                        text_size: self.size
-                        halign: "center"
-                        valign: "center"
-                        disabled: True
-                        click: False
-                        press: False
-                        on_text: self.click = True
-                        on_press: self.press = True
+                        press_v: False
+                        on_press: root.SetupVideo()
 
             BoxLayout:
                 spacing: 5

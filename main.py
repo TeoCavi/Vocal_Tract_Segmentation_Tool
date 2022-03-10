@@ -3,6 +3,8 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from tensorflow.python.client import device_lib 
 from PIL import Image
+import tkinter
+from tkinter import filedialog
 import kivy
 import cv2
 import numpy as np
@@ -64,114 +66,136 @@ class Home (BoxLayout):
     msg=ObjectProperty()
     mri=ObjectProperty()
 
-    global video_path
     global dir_path
     global model_path
     dir_path = r"C:\Users\matte\Desktop\VTSTool_DIR"
-    video_path = os.path.join(dir_path, 'Video')
     model_path = os.path.join(dir_path, 'Models')
+
     
-    def update(self, *args):
-        sbj = os.listdir(video_path)
-        self.sbj.values = sbj
+    # def update(self, *args):
+    #     sbj = os.listdir(video_path)
+    #     self.sbj.values = sbj
 
-        if self.sbj.press == True:
-            self.msg.text = 'Select one Subject'
-            self.sbj.text = ''
-            self.sbjtask.text = ""
-            self.sbjtask.click = False
-            self.sbj.click = False
-            self.model.click = False
-            self.mri.canvas.after.clear()
-            self.mri.canvas.before.clear()
-            self.pred.disabled = self.sbjtask.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = True
-            self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
-            self.sbj.press = False
-            self.toggle.disabled
+    #     if self.sbj.press == True:
+    #         self.msg.text = 'Select one Subject'
+    #         self.sbj.text = ''
+    #         self.sbjtask.text = ""
+    #         self.sbjtask.click = False
+    #         self.sbj.click = False
+    #         self.model.click = False
+    #         self.mri.canvas.after.clear()
+    #         self.mri.canvas.before.clear()
+    #         self.pred.disabled = self.sbjtask.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = True
+    #         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+    #         self.sbj.press = False
+    #         self.toggle.disabled
 
-        if self.sbjtask.press == True:
-            self.msg.text = 'Select one Task for ' + self.sbj.text
-            self.sbjtask.text = ""
-            self.sbjtask.click = False
-            self.model.click = False
-            self.mri.canvas.after.clear()
-            self.mri.canvas.before.clear()
-            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = True
-            self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
-            self.sbjtask.press = False
-            self.toggle.disabled
+    #     if self.sbjtask.press == True:
+    #         self.msg.text = 'Select one Task for ' + self.sbj.text
+    #         self.sbjtask.text = ""
+    #         self.sbjtask.click = False
+    #         self.model.click = False
+    #         self.mri.canvas.after.clear()
+    #         self.mri.canvas.before.clear()
+    #         self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = True
+    #         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+    #         self.sbjtask.press = False
+    #         self.toggle.disabled
 
-        if self.model.press == True:
-            self.msg.text = 'Select one Model for prediction'
-            self.model.text = ""
-            self.model.click = False
-            self.mri.canvas.after.clear()
-            self.mri.canvas.before.clear()
-            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
-            self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
-            self.model.press = False
-            self.toggle.disabled
+    #     if self.model.press == True:
+    #         self.msg.text = 'Select one Model for prediction'
+    #         self.model.text = ""
+    #         self.model.click = False
+    #         self.mri.canvas.after.clear()
+    #         self.mri.canvas.before.clear()
+    #         self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
+    #         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+    #         self.model.press = False
+    #         self.toggle.disabled
             
-        if self.sbj.click == True:
-            self.taskdir = os.path.join(video_path, self.sbj.text)
-            st = os.listdir(self.taskdir)
-            self.sbjtask.disabled = False
-            self.sbjtask.values = st
-            self.msg.text = 'Select one task for ' + self.sbj.text
+    #     if self.sbj.click == True:
+    #         dataset_dir = filedialog.askdirectory()
+    #         print(dataset_dir)
+    #         self.taskdir = os.path.join(video_path, self.sbj.text)
+    #         st = os.listdir(self.taskdir)
+    #         self.sbjtask.disabled = False
+    #         self.sbjtask.values = st
+    #         self.msg.text = 'Select one task for ' + self.sbj.text
         
-        if self.sbjtask.click == True:
-            self.model.disabled = False
-            fnames = os.listdir(os.path.join(self.taskdir, self.sbjtask.text ))
-            self.fname = ''
-            for file in fnames:
-                if file.endswith(".avi"):
-                    self.fname = file
+    #     if self.sbjtask.click == True:
+    #         self.model.disabled = False
+    #         fnames = os.listdir(os.path.join(self.taskdir, self.sbjtask.text ))
+    #         self.fname = ''
+    #         for file in fnames:
+    #             if file.endswith(".avi"):
+    #                 self.fname = file
 
-            models = os.listdir(model_path)
+    #         models = os.listdir(model_path)
 
-            self.model.values = models
+    #         self.model.values = models
             
-            self.fdir = os.path.join(self.taskdir, self.sbjtask.text)
-            self.msg.text = 'Select one model for prediction'
+    #         self.fdir = os.path.join(self.taskdir, self.sbjtask.text)
+    #         self.msg.text = 'Select one model for prediction'
 
         
-        if self.model.click == True:
-            self.pred.disabled = False
-            self.pred_model =  self.model.text
-            self.msg.text = 'Click on Predict to start Vocal Tract Segmentation'
+    #     if self.model.click == True:
+    #         self.pred.disabled = False
+    #         self.pred_model =  self.model.text
+    #         self.msg.text = 'Click on Predict to start Vocal Tract Segmentation'
 
-        if self.mri.disabled == False and self.initial_dim != self.size:
-            #Update is to remove blocking functions
-            for el in self.image_set:
-                el.pos = self.mri.pos
-                el.size = self.mri.size
+    #     if self.mri.disabled == False and self.initial_dim != self.size:
+    #         #Update is to remove blocking functions
+    #         for el in self.image_set:
+    #             el.pos = self.mri.pos
+    #             el.size = self.mri.size
             
 
-            if self.check_distances == True:
+    #         if self.check_distances == True:
 
-                print(self.initial_dim)
-                print(self.size)
-                print(self.size[0])
-                print(self.initial_dim[0])
-                stretch = (self.size[0]/self.initial_dim[0], self.size[1]/self.initial_dim[1])
-                print(self.initial_pos)
-                print(self.mri.pos)
-                # delta = [self.initial_pos[0]-self.mri.pos[0], self.initial_pos[1]-self.mri.pos[1]]
-                # print(delta)
-                num = 0
-                for ds in self.distances:
-                    if (num % 2) == 0: #Ellipses
-                        print(ds.pos)
-                        ds.pos = (ds.pos[0]*stretch[0], ds.pos[1]*stretch[1])
-                        print(ds.pos)
-                    else:
-                        print('before',ds.points)
-                        ds.points = (ds.points[0]*stretch[0], ds.points[1]*stretch[1], ds.points[2]*stretch[0], ds.points[3]*stretch[1])
-                        ds.width = ds.width*stretch[1]
-                        print('after', ds.points)
-                    num = num + 1
+    #             print(self.initial_dim)
+    #             print(self.size)
+    #             print(self.size[0])
+    #             print(self.initial_dim[0])
+    #             stretch = (self.size[0]/self.initial_dim[0], self.size[1]/self.initial_dim[1])
+    #             print(self.initial_pos)
+    #             print(self.mri.pos)
+    #             # delta = [self.initial_pos[0]-self.mri.pos[0], self.initial_pos[1]-self.mri.pos[1]]
+    #             # print(delta)
+    #             num = 0
+    #             for ds in self.distances:
+    #                 if (num % 2) == 0: #Ellipses
+    #                     print(ds.pos)
+    #                     ds.pos = (ds.pos[0]*stretch[0], ds.pos[1]*stretch[1])
+    #                     print(ds.pos)
+    #                 else:
+    #                     print('before',ds.points)
+    #                     ds.points = (ds.points[0]*stretch[0], ds.points[1]*stretch[1], ds.points[2]*stretch[0], ds.points[3]*stretch[1])
+    #                     ds.width = ds.width*stretch[1]
+    #                     print('after', ds.points)
+    #                 num = num + 1
             
-            self.initial_dim = self.size.copy()
+    #         self.initial_dim = self.size.copy()
+
+
+    def SetupVideo(self, *args):
+        self.sbj.press_v = False
+        self.pred.disabled = True
+        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
+        self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+        tkinter.Tk().withdraw()
+        self.fpath = filedialog.askopenfilename(initialdir = dir_path,     #salva in filename il nome del video con la sua collocazione
+                                        title = "Select Video",
+                                        filetypes= (("avi files", "*.avi"), ("all files", "*.*"))) #find only .avi files
+        print(self.fpath)
+        if self.fpath == '':
+            self.sbj.text = 'Select Video'
+        name = os.path.splitext(os.path.basename(self.fpath))
+
+
+        
+        
+        
+        
 
     def Prediction(self, *args):
         self.slider.value = 0.0
@@ -181,7 +205,7 @@ class Home (BoxLayout):
         self.sbj.click = False
         name = 's_' + os.path.splitext(self.fname)[0] #salva in name solo il nome del video (senza l'estensione .avi)
         dataset_dir = os.path.join(dir_path, 'Dataset')
-        cap = cv2.VideoCapture(os.path.join(self.fdir,self.fname)) # video salvato in cap
+        cap = cv2.VideoCapture(self.fpath) # video salvato in cap
         frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         frames = []
         check = True
@@ -392,7 +416,7 @@ class Home (BoxLayout):
 class VTS_ToolApp(App):
     def build(self):
         home = Home()
-        Clock.schedule_interval(home.update, 0.001)
+        # Clock.schedule_interval(home.update, 0.001)
         return home
 
 if __name__ == '__main__':
