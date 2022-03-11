@@ -25,6 +25,7 @@
     toggle: _toggle
     model: _model
     play: _play
+    graph: _graph
 
 
     BoxLayout:                          #connection part
@@ -41,7 +42,7 @@
                 orientation:"vertical"
                 BoxLayout:
                     orientation:"horizontal"           
-                    Button:
+                    Button:    
                         id: _sbj
                         text: 'Select Video'
                         text_size: self.size
@@ -120,6 +121,26 @@
                     text: 'HE'
                     state: 'normal'
                     on_press: root.Plotter(clear = False)
+            
+            BoxLayout:
+                size_hint: (1,0.5)
+                Graph:
+                    id: _graph
+                    disabled: True
+                    padding: 0
+                    size_hint_x: 1
+                    size_hint_y: 1
+                    xlabel: 'Frames'
+                    ylabel: '[A]'
+                    x_grid:False
+                    y_grid:True
+                    x_ticks_major: 0
+                    y_ticks_major: 0
+                    x_grid_label: False
+                    y_grid_label: False
+                    xmin:0
+                    ymin:0  
+                    background_color: 0.5, 0.5, 0.5, 1
 
 
 

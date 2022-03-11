@@ -8,10 +8,12 @@ from tkinter import filedialog
 import kivy
 import cv2
 import numpy as np
+# import pyautogui
 kivy.require("2.0.0")
 
 from kivy.app import App
 from kivy.graphics.texture import Texture
+from kivy.core.window import Window
 from kivy.uix.label import Label
 from kivy.graphics import Color
 from kivy.uix.button import Button
@@ -23,7 +25,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.spinner import Spinner
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
-from kivy_garden.graph import Graph, LinePlot
+from kivy_garden.graph import Graph, MeshLinePlot, LinePlot
 from kivy.config import Config
 
 import os
@@ -71,146 +73,98 @@ class Home (BoxLayout):
     dir_path = r"C:\Users\matte\Desktop\VTSTool_DIR"
     model_path = os.path.join(dir_path, 'Models')
 
-    
-    # def update(self, *args):
-    #     sbj = os.listdir(video_path)
-    #     self.sbj.values = sbj
+    def update(self, *args):
+        if self.sbj.press_v == True:
+            self.sbj.press_v = False
 
-    #     if self.sbj.press == True:
-    #         self.msg.text = 'Select one Subject'
-    #         self.sbj.text = ''
-    #         self.sbjtask.text = ""
-    #         self.sbjtask.click = False
-    #         self.sbj.click = False
-    #         self.model.click = False
-    #         self.mri.canvas.after.clear()
-    #         self.mri.canvas.before.clear()
-    #         self.pred.disabled = self.sbjtask.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = True
-    #         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
-    #         self.sbj.press = False
-    #         self.toggle.disabled
+            tkinter.Tk().withdraw()
+            self.fpath = filedialog.askopenfilename(initialdir = dir_path,     #salva in filename il nome del video con la sua collocazione
+                                            title = "Select Video",
+                                            filetypes= (("avi files", "*.avi"), ("all files", "*.*"))) #find only .avi files
+            Window.raise_window()
 
-    #     if self.sbjtask.press == True:
-    #         self.msg.text = 'Select one Task for ' + self.sbj.text
-    #         self.sbjtask.text = ""
-    #         self.sbjtask.click = False
-    #         self.model.click = False
-    #         self.mri.canvas.after.clear()
-    #         self.mri.canvas.before.clear()
-    #         self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = True
-    #         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
-    #         self.sbjtask.press = False
-    #         self.toggle.disabled
+            print(self.fpath)
+            if self.fpath == '':
+                self.sbj.text = 'Select Video'
+            else:
+                name = os.path.splitext(os.path.basename(self.fpath))
+                self.sbj.text = name[0]
+                self.model.disabled = False
+                models = os.listdir(model_path)
+                self.model.values = models
 
-    #     if self.model.press == True:
-    #         self.msg.text = 'Select one Model for prediction'
-    #         self.model.text = ""
-    #         self.model.click = False
-    #         self.mri.canvas.after.clear()
-    #         self.mri.canvas.before.clear()
-    #         self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
-    #         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
-    #         self.model.press = False
-    #         self.toggle.disabled
-            
-    #     if self.sbj.click == True:
-    #         dataset_dir = filedialog.askdirectory()
-    #         print(dataset_dir)
-    #         self.taskdir = os.path.join(video_path, self.sbj.text)
-    #         st = os.listdir(self.taskdir)
-    #         self.sbjtask.disabled = False
-    #         self.sbjtask.values = st
-    #         self.msg.text = 'Select one task for ' + self.sbj.text
-        
-    #     if self.sbjtask.click == True:
-    #         self.model.disabled = False
-    #         fnames = os.listdir(os.path.join(self.taskdir, self.sbjtask.text ))
-    #         self.fname = ''
-    #         for file in fnames:
-    #             if file.endswith(".avi"):
-    #                 self.fname = file
+        if self.model.press == True:
+            self.msg.text = 'Select one Model for prediction'
+            self.model.text = ""
+            self.model.click = False
+            self.mri.canvas.after.clear()
+            self.mri.canvas.before.clear()
+            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.graph.disabled = True
+            self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+            self.model.press = False
+            self.toggle.disabled
+                  
+        if self.model.click == True:
+            self.pred.disabled = False
+            self.pred_model =  self.model.text
+            self.msg.text = 'Click on Predict to start Vocal Tract Segmentation'
 
-    #         models = os.listdir(model_path)
-
-    #         self.model.values = models
-            
-    #         self.fdir = os.path.join(self.taskdir, self.sbjtask.text)
-    #         self.msg.text = 'Select one model for prediction'
-
-        
-    #     if self.model.click == True:
-    #         self.pred.disabled = False
-    #         self.pred_model =  self.model.text
-    #         self.msg.text = 'Click on Predict to start Vocal Tract Segmentation'
-
-    #     if self.mri.disabled == False and self.initial_dim != self.size:
-    #         #Update is to remove blocking functions
-    #         for el in self.image_set:
-    #             el.pos = self.mri.pos
-    #             el.size = self.mri.size
+        if self.mri.disabled == False and self.initial_dim != self.size:
+            #Update is to remove blocking functions
+            for el in self.image_set:
+                el.pos = self.mri.pos
+                el.size = self.mri.size
             
 
-    #         if self.check_distances == True:
+            if self.check_distances == True:
 
-    #             print(self.initial_dim)
-    #             print(self.size)
-    #             print(self.size[0])
-    #             print(self.initial_dim[0])
-    #             stretch = (self.size[0]/self.initial_dim[0], self.size[1]/self.initial_dim[1])
-    #             print(self.initial_pos)
-    #             print(self.mri.pos)
-    #             # delta = [self.initial_pos[0]-self.mri.pos[0], self.initial_pos[1]-self.mri.pos[1]]
-    #             # print(delta)
-    #             num = 0
-    #             for ds in self.distances:
-    #                 if (num % 2) == 0: #Ellipses
-    #                     print(ds.pos)
-    #                     ds.pos = (ds.pos[0]*stretch[0], ds.pos[1]*stretch[1])
-    #                     print(ds.pos)
-    #                 else:
-    #                     print('before',ds.points)
-    #                     ds.points = (ds.points[0]*stretch[0], ds.points[1]*stretch[1], ds.points[2]*stretch[0], ds.points[3]*stretch[1])
-    #                     ds.width = ds.width*stretch[1]
-    #                     print('after', ds.points)
-    #                 num = num + 1
+                print(self.initial_dim)
+                print(self.size)
+                print(self.size[0])
+                print(self.initial_dim[0])
+                stretch = (self.size[0]/self.initial_dim[0], self.size[1]/self.initial_dim[1])
+                print(self.initial_pos)
+                print(self.mri.pos)
+                # delta = [self.initial_pos[0]-self.mri.pos[0], self.initial_pos[1]-self.mri.pos[1]]
+                # print(delta)
+                num = 0
+                for ds in self.distances:
+                    if (num % 2) == 0: #Ellipses
+                        print(ds.pos)
+                        ds.pos = (ds.pos[0]*stretch[0], ds.pos[1]*stretch[1])
+                        print(ds.pos)
+                    else:
+                        print('before',ds.points)
+                        ds.points = (ds.points[0]*stretch[0], ds.points[1]*stretch[1], ds.points[2]*stretch[0], ds.points[3]*stretch[1])
+                        ds.width = ds.width*stretch[1]
+                        print('after', ds.points)
+                    num = num + 1
             
-    #         self.initial_dim = self.size.copy()
+            self.initial_dim = self.size.copy()
 
 
     def SetupVideo(self, *args):
-        self.sbj.press_v = False
-        self.pred.disabled = True
-        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = True
+        self.mri.canvas.after.clear()
+        self.mri.canvas.before.clear()
+        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = self.graph.disabled = True
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
-        tkinter.Tk().withdraw()
-        self.fpath = filedialog.askopenfilename(initialdir = dir_path,     #salva in filename il nome del video con la sua collocazione
-                                        title = "Select Video",
-                                        filetypes= (("avi files", "*.avi"), ("all files", "*.*"))) #find only .avi files
-        print(self.fpath)
-        if self.fpath == '':
-            self.sbj.text = 'Select Video'
-        name = os.path.splitext(os.path.basename(self.fpath))
+        self.sbj.press_v = True
+
 
 
         
-        
-        
-        
-
     def Prediction(self, *args):
         self.slider.value = 0.0
         self.msg.text = 'I am loading ' + self.sbj.text + ' video...'
-        self.sbjtask.click = False
         self.model.click = False
-        self.sbj.click = False
-        name = 's_' + os.path.splitext(self.fname)[0] #salva in name solo il nome del video (senza l'estensione .avi)
-        dataset_dir = os.path.join(dir_path, 'Dataset')
+        # name = 's_' + os.path.splitext(self.fname)[0] #salva in name solo il nome del video (senza l'estensione .avi)
+        # dataset_dir = os.path.join(dir_path, 'Dataset')
         cap = cv2.VideoCapture(self.fpath) # video salvato in cap
         frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         frames = []
         check = True
         i = 0
-        images_to_keep = 5  #all is 354
+        images_to_keep = 354  #all is 354
         self.slider.max = images_to_keep-1
         self.slider.min = 0
         step = int((frameCount-1)/images_to_keep)
@@ -226,6 +180,8 @@ class Home (BoxLayout):
             i = i+1
         self.plot_mri = np.rot90(np.asarray(frames), 2)
         self.image = np.asarray(frames)
+        self.tot_frames = self.image.shape[0]
+        print(self.tot_frames)
 
         rgb_weights = [0.2989, 0.5870, 0.1140]
         self.image = np.dot(self.image[...,:3], rgb_weights)
@@ -242,20 +198,28 @@ class Home (BoxLayout):
         model = tf.keras.models.load_model(os.path.join(model_path, model_name), compile = False)
 
         print('Inizio predizioni')
-        self.predictions = model.predict(self.image, batch_size = 50)
+        self.predictions = model.predict(self.image, batch_size = 32)
         print('fine predizioni')
         print('inizio ricomposizione')
-        self.predictions = Home().prediction_recomposition(self.predictions, rgba = [1, 1, 1, 1], out_classes = True)
+        self.predictions, self.areas = Home().prediction_recomposition(self.predictions, rgba = [1, 1, 1, 1], out_classes = True)
         print('fine ricomposizione')
+
+        
+        print(self.predictions.shape)
+        print(self.areas.shape)
 
         self.slider.disabled = False
         self.toggle.disabled = False
         self.mri.disabled = False
+        self.graph.disabled = False
 
         self.image_set = []
         self.distances = []
+        
         self.initial_dim = 0
         self.check_distances = False
+        self.graph_plot = [None]
+        
 
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
         texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
@@ -287,6 +251,14 @@ class Home (BoxLayout):
         textureHE = Texture.create(size=(256, 256), colorfmt='rgba')
         textureHE.blit_buffer(self.predictions[frame,:,:,6,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
 
+        for g in self.graph_plot:
+            self.graph.remove_plot(g)
+        self.graph._clear_buffer()
+        self.graph_plot = []
+        ymax = []
+
+        x = np.arange(frame+1)
+
         with self.mri.canvas.before:
             if clear == True:
                 self.mri.canvas.after.clear()
@@ -317,7 +289,57 @@ class Home (BoxLayout):
             if self.he.state == 'down': 
                 Color(0.7, 1, 0.7, 0.3)
                 self.image_set.append(Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,))
-        
+
+        #They must be outside of with canvas:, otherwise double line
+        if self.bk.state == 'down' : 
+            self.plot_bk = MeshLinePlot(color=[0.5, 1, 1, 1])
+            self.plot_bk.points = [(x_0, self.areas[x_0,0].numpy()/100) for x_0 in x]
+            self.graph_plot.append(self.plot_bk)
+            ymax.append(int(np.max(self.areas[:,0])/100 *2))
+        if self.ul.state == 'down': 
+            self.plot_ul = MeshLinePlot(color=[1, 0.5, 1, 1])
+            self.plot_ul.points = [(x_1, self.areas[x_1,1].numpy()/100) for x_1 in x]
+            self.graph_plot.append(self.plot_ul)
+            ymax.append(int(np.max(self.areas[:,1])/100 *2))
+        if self.hp.state == 'down': 
+            self.plot_hp = MeshLinePlot(color=[1, 1, 0.5, 1])
+            self.plot_hp.points = [(x_2, self.areas[x_2,2].numpy()/100) for x_2 in x]
+            self.graph_plot.append(self.plot_hp)
+            ymax.append(int(np.max(self.areas[:,2])/100 *2))
+        if self.sp.state == 'down': 
+            Color(0.5, 1, 0.5, 0.3)
+            self.plot_sp = MeshLinePlot(color=[0.5, 1, 0.5, 1])
+            self.plot_sp.points = [(x_3, self.areas[x_3,3].numpy()/100) for x_3 in x]
+            self.graph_plot.append(self.plot_sp)
+            ymax.append(int(np.max(self.areas[:,3])/100 *2))
+        if self.to.state == 'down': 
+            self.plot_to = MeshLinePlot(color=[0.5, 0.5, 1, 1])
+            self.plot_to.points = [(x_4, self.areas[x_4,4].numpy()/100) for x_4 in x]
+            self.graph_plot.append(self.plot_to)
+            ymax.append(int(np.max(self.areas[:,4])/100 *2))
+        if self.ll.state == 'down': 
+            self.plot_ll = MeshLinePlot(color=[1, 0.5, 0.5, 1])
+            self.plot_ll.points = [(x_5, self.areas[x_5,5].numpy()/100) for x_5 in x]
+            self.graph_plot.append(self.plot_ll)
+            ymax.append(int(np.max(self.areas[:,5])/100 *2))
+        if self.he.state == 'down': 
+            self.plot_he = LinePlot(color=[0.7, 1, 0.7, 1])
+            self.plot_he.points = [(x_6, self.areas[x_6,6].numpy()/100) for x_6 in x]
+            self.graph_plot.append(self.plot_he)
+            ymax.append(int(np.max(self.areas[:,6])/100 *2))
+
+        if ymax:
+            ass_ymax = np.max(np.asarray(ymax))
+            self.graph.ymax = float(ass_ymax)
+        if  self.areas[:frame,0].shape != 0:
+            self.graph.xmax = float(self.areas[:frame,0].shape[0])
+        else:
+            self.graph.xmax = 1.0
+
+
+        for g in self.graph_plot:
+            self.graph.add_plot(g)
+
         #print(self.boxdim.size)
 
     def Draw(self, set = 1, *args):
@@ -410,13 +432,15 @@ class Home (BoxLayout):
 
             voxel_rgba = np.rot90(voxel_rgba, 2)
 
-        return voxel_rgba
+            areas = tf.math.count_nonzero(voxel, axis = (1,2))
+
+        return voxel_rgba, areas
 
     
 class VTS_ToolApp(App):
     def build(self):
         home = Home()
-        # Clock.schedule_interval(home.update, 0.001)
+        Clock.schedule_interval(home.update, 0.001)
         return home
 
 if __name__ == '__main__':
