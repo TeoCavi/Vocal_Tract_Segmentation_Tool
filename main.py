@@ -1,4 +1,5 @@
 from turtle import color, home
+import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from tensorflow.python.client import device_lib 
@@ -29,6 +30,7 @@ from kivy_garden.graph import Graph, MeshLinePlot, LinePlot
 from kivy.config import Config
 
 import os
+UPDATING_FREQ = 0.001
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #decommentare per escludere la GPU
 print(device_lib.list_local_devices())
@@ -99,7 +101,7 @@ class Home (BoxLayout):
             self.model.click = False
             self.mri.canvas.after.clear()
             self.mri.canvas.before.clear()
-            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.graph.disabled = True
+            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.graph.disabled = self.play.disabled = True
             self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
             self.model.press = False
             self.toggle.disabled
@@ -141,12 +143,22 @@ class Home (BoxLayout):
                     num = num + 1
             
             self.initial_dim = self.size.copy()
+        
+        if self.play.state == 'down':
+            self.counter = self.counter + 1
+            if self.counter == self.max_count:
+                if self.slider.value == self.play.frames:
+                    self.slider.value = 0
+                    self.play.state = 'normal'
+                else:
+                    self.slider.value = self.slider.value + 1
+                self.counter = 0
 
 
     def SetupVideo(self, *args):
         self.mri.canvas.after.clear()
         self.mri.canvas.before.clear()
-        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = self.graph.disabled = True
+        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = self.graph.disabled = self.play.disabled = True
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
         self.sbj.press_v = True
 
@@ -180,8 +192,6 @@ class Home (BoxLayout):
             i = i+1
         self.plot_mri = np.rot90(np.asarray(frames), 2)
         self.image = np.asarray(frames)
-        self.tot_frames = self.image.shape[0]
-        print(self.tot_frames)
 
         rgb_weights = [0.2989, 0.5870, 0.1140]
         self.image = np.dot(self.image[...,:3], rgb_weights)
@@ -204,12 +214,16 @@ class Home (BoxLayout):
         self.predictions, self.areas = Home().prediction_recomposition(self.predictions, rgba = [1, 1, 1, 1], out_classes = True)
         print('fine ricomposizione')
 
+        self.tot_frames = self.areas[:,0].shape[0] #extract frames from areas
+        self.play.frames = self.tot_frames-1 
+
         
         print(self.predictions.shape)
         print(self.areas.shape)
 
         self.slider.disabled = False
         self.toggle.disabled = False
+        self.play.disabled = False
         self.mri.disabled = False
         self.graph.disabled = False
 
@@ -219,6 +233,10 @@ class Home (BoxLayout):
         self.initial_dim = 0
         self.check_distances = False
         self.graph_plot = [None]
+
+        self.counter = 0
+        needed_freq = 1/25 #frames
+        self.max_count = (needed_freq/UPDATING_FREQ)
         
 
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
@@ -435,12 +453,23 @@ class Home (BoxLayout):
             areas = tf.math.count_nonzero(voxel, axis = (1,2))
 
         return voxel_rgba, areas
+    
+    def time(self, *args):
+        time.sleep(1)
 
     
+    def Play(self, *args):
+        if self.slider.value+1 == self.tot_frames:
+             self.slider.value = 0
+        else:
+            self.slider.value = self.slider.value + 1
+            print(self.slider.value)
+            time.sleep(1)
+
 class VTS_ToolApp(App):
     def build(self):
         home = Home()
-        Clock.schedule_interval(home.update, 0.001)
+        Clock.schedule_interval(home.update, UPDATING_FREQ)
         return home
 
 if __name__ == '__main__':

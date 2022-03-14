@@ -198,11 +198,14 @@
             spacing: 5
             ToggleButton:
                 id: _play
+                disabled: True
                 size: self.size
                 size_hint:(0.05,1)
                 pos: self.pos
+                frames:
                 state: 'normal'
-                color: {'normal': (1,1,1,1), 'down': (0,1,0,1)} [self.state]
+                color: {'normal': (1,1,1,1), 'down': (0,1,0,1)} [self.state] 
+                    
                 canvas.after:
                     Color:
                         rgba: 0.5, 0.5, 0.5, 1
