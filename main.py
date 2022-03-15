@@ -7,7 +7,9 @@ from PIL import Image
 import tkinter
 from tkinter import filedialog
 import kivy
-import cv2
+from threading import Thread
+from multiprocessing import Process
+
 import numpy as np
 # import pyautogui
 kivy.require("2.0.0")
@@ -28,12 +30,29 @@ from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy_garden.graph import Graph, MeshLinePlot, LinePlot
 from kivy.config import Config
+from utils import prediction
 
 import os
 UPDATING_FREQ = 0.001
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #decommentare per escludere la GPU
 print(device_lib.list_local_devices())
+
+
+class ThreadWithReturnValue(Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs={}, Verbose = None):
+        Thread.__init__(self, group, target, name, args, kwargs)
+        self._return = None
+    def run(self):
+        if self._target is not None:
+            self._return = self._target(*self._args)#, **self._kwrags)
+
+    # def is_alive(self) -> bool:
+    #     return super().is_alive()
+    def join(self, *args):
+        Thread.join(self, *args)
+        return self._return
 
 class DrawScreen(BoxLayout):
     def on_touch_down(self, touch):
@@ -43,15 +62,6 @@ class DrawScreen(BoxLayout):
             self.check = True
         else:
             self.check = False
-
-        # if touch.is_mouse_scrolling:
-        #     if touch.button == 'scrolldown':
-        #         if self.scale < 10:
-        #             self.scale = self.scale * 1.1
-        #     elif touch.button == 'scrollup':
-        #         if self.scale > 1:
-        #             self.scale = self.scale * 0.8
-    
         return super(DrawScreen, self).on_touch_down(touch)
     
     def on_touch_up(self, touch):
@@ -62,7 +72,6 @@ class Home (BoxLayout):
     
     Config.set('graphics', 'width', '1200')
     Config.set('graphics', 'height', '800')
-    #Config.set('graphics', 'position', 'auto')
     Config.write()
     sbj=ObjectProperty()
     sbjtask=ObjectProperty()
@@ -74,6 +83,11 @@ class Home (BoxLayout):
     global model_path
     dir_path = r"C:\Users\matte\Desktop\VTSTool_DIR"
     model_path = os.path.join(dir_path, 'Models')
+
+    def __init__(self, **kwargs):
+        self.loading_bar = 0
+        self.thread_pred_start = 0
+        super().__init__(**kwargs)
 
     def update(self, *args):
         if self.sbj.press_v == True:
@@ -154,6 +168,50 @@ class Home (BoxLayout):
                     self.slider.value = self.slider.value + 1
                 self.counter = 0
 
+        if self.thread_pred_start == 1:
+            # if self.thread_pred.run() == None:
+            if self.loading_bar < 7:
+                self.msg.text = self.msg.text + '.'
+                self.loading_bar = self.loading_bar + 1
+            else:
+                self.msg.text = self.msg_loading
+                self.loading_bar = 0
+
+            if self.thread_pred.is_alive() == False:
+                print('in')
+                self.plot_mri, self.image, self.predictions, self.areas = self.thread_pred.join()
+                
+                self.tot_frames = self.areas[:,0].shape[0] #extract frames from areas
+                self.play.frames = self.tot_frames-1
+                
+                print(self.predictions.shape)
+                print(self.areas.shape)
+
+                self.slider.disabled = False
+                self.toggle.disabled = False
+                self.play.disabled = False
+                self.mri.disabled = False
+                self.graph.disabled = False
+
+                self.image_set = []
+                self.distances = []
+                
+                self.initial_dim = 0
+                self.check_distances = False
+                self.graph_plot = [None]
+
+                self.counter = 0
+                needed_freq = 1/25 #frames
+                self.max_count = (needed_freq/UPDATING_FREQ)
+                texture = Texture.create(size=(256, 256), colorfmt='rgb')
+                texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
+                with self.mri.canvas.before:
+                    self.mri.canvas.clear()
+                    Color(1, 1, 1, 1)  
+                    self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
+
+                self.thread_pred_start = 0
+
 
     def SetupVideo(self, *args):
         self.mri.canvas.after.clear()
@@ -161,90 +219,62 @@ class Home (BoxLayout):
         self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = self.graph.disabled = self.play.disabled = True
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
         self.sbj.press_v = True
-
-
-
         
     def Prediction(self, *args):
+
         self.slider.value = 0.0
-        self.msg.text = 'I am loading ' + self.sbj.text + ' video...'
+        self.msg.text = 'I am segmenting ' + self.sbj.text + ' video'
+        self.msg_loading = self.msg.text
         self.model.click = False
-        # name = 's_' + os.path.splitext(self.fname)[0] #salva in name solo il nome del video (senza l'estensione .avi)
-        # dataset_dir = os.path.join(dir_path, 'Dataset')
-        cap = cv2.VideoCapture(self.fpath) # video salvato in cap
-        frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        frames = []
-        check = True
-        i = 0
-        images_to_keep = 354  #all is 354
+        self.mri.canvas.after.clear()
+        self.mri.canvas.before.clear()
+        self.slider.disabled = self.toggle.disabled = self.play.disabled = self.mri.disabled = self.graph.disabled = True
+        self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+
+
+        images_to_keep = 5  #all is 354
         self.slider.max = images_to_keep-1
         self.slider.min = 0
-        step = int((frameCount-1)/images_to_keep)
-        step_i = step
-        self.msg.text = 'I am extracting frames...'
-        while check:
-            check, arr = cap.read()
-            if check and i != 0 and step == 1: #the first image is white
-                frames.append(arr)
-            elif check and i !=0 and i == step:
-                frames.append(arr)
-                step = step + step_i
-            i = i+1
-        self.plot_mri = np.rot90(np.asarray(frames), 2)
-        self.image = np.asarray(frames)
 
-        rgb_weights = [0.2989, 0.5870, 0.1140]
-        self.image = np.dot(self.image[...,:3], rgb_weights)
+        self.thread_pred = ThreadWithReturnValue(target=prediction, args=(self.fpath, images_to_keep, model_path, self.pred_model), kwargs={})
+        self.thread_pred.daemon = True
+        self.thread_pred.start()
+        self.thread_pred_start = 1
 
-        lb = np.amin(self.image)
-        ub = 130.89391984
-        self.image = np.where(self.image < lb, lb, self.image)
-        self.image = np.where(self.image > ub, ub, self.image)
-        self.image = self.image - lb
-        self.image /= (ub - lb)
-        self.image = np.expand_dims(self.image, 3)
+        # self.plot_mri, self.image, self.predictions, self.areas = prediction(fpath = self.fpath, 
+        #                                                                      images_to_keep = images_to_keep, 
+        #                                                                      model_path = model_path, 
+        #                                                                      model_name = self.pred_model)
 
-        model_name = self.pred_model #'IMUNetAtt_DiceCEFocalTopK_20220122-093857.h5'
-        model = tf.keras.models.load_model(os.path.join(model_path, model_name), compile = False)
-
-        print('Inizio predizioni')
-        self.predictions = model.predict(self.image, batch_size = 32)
-        print('fine predizioni')
-        print('inizio ricomposizione')
-        self.predictions, self.areas = Home().prediction_recomposition(self.predictions, rgba = [1, 1, 1, 1], out_classes = True)
-        print('fine ricomposizione')
-
-        self.tot_frames = self.areas[:,0].shape[0] #extract frames from areas
-        self.play.frames = self.tot_frames-1 
+        # self.tot_frames = self.areas[:,0].shape[0] #extract frames from areas
+        # self.play.frames = self.tot_frames-1
 
         
-        print(self.predictions.shape)
-        print(self.areas.shape)
+        # print(self.predictions.shape)
+        # print(self.areas.shape)
 
-        self.slider.disabled = False
-        self.toggle.disabled = False
-        self.play.disabled = False
-        self.mri.disabled = False
-        self.graph.disabled = False
+        # self.slider.disabled = False
+        # self.toggle.disabled = False
+        # self.play.disabled = False
+        # self.mri.disabled = False
+        # self.graph.disabled = False
 
-        self.image_set = []
-        self.distances = []
+        # self.image_set = []
+        # self.distances = []
         
-        self.initial_dim = 0
-        self.check_distances = False
-        self.graph_plot = [None]
+        # self.initial_dim = 0
+        # self.check_distances = False
+        # self.graph_plot = [None]
 
-        self.counter = 0
-        needed_freq = 1/25 #frames
-        self.max_count = (needed_freq/UPDATING_FREQ)
-        
-
-        texture = Texture.create(size=(256, 256), colorfmt='rgb')
-        texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
-        with self.mri.canvas.before:
-            self.mri.canvas.clear()
-            Color(1, 1, 1, 1)  
-            self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
+        # self.counter = 0
+        # needed_freq = 1/25 #frames
+        # self.max_count = (needed_freq/UPDATING_FREQ)
+        # texture = Texture.create(size=(256, 256), colorfmt='rgb')
+        # texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
+        # with self.mri.canvas.before:
+        #     self.mri.canvas.clear()
+        #     Color(1, 1, 1, 1)  
+        #     self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
 
     def Plotter(self, clear, *args):
 
@@ -349,10 +379,14 @@ class Home (BoxLayout):
         if ymax:
             ass_ymax = np.max(np.asarray(ymax))
             self.graph.ymax = float(ass_ymax)
+            self.graph.y_ticks_major = float(ass_ymax)
         if  self.areas[:frame,0].shape != 0:
             self.graph.xmax = float(self.areas[:frame,0].shape[0])
+            self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])
         else:
             self.graph.xmax = 1.0
+
+        self.graph.border_color = (0.3,0.3,0.3,1)
 
 
         for g in self.graph_plot:
@@ -387,72 +421,6 @@ class Home (BoxLayout):
                 self.mri.state = 0
                 self.check_distances = True
                    
-    def prediction_recomposition(self, prediction, rgba, out_classes):
-
-        if len(prediction.shape) == 4 and out_classes == False:
-            voxel = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2]])
-
-            voxel = tf.math.argmax(prediction, axis = 3)
-            voxel = tf.where(tf.equal(voxel, 0), tf.ones_like(voxel)*7, voxel)
-            voxel = tf.expand_dims(voxel, 3)
-
-        elif len(prediction.shape) == 3 and out_classes == False:
-            voxel = np.zeros([prediction.shape[0],prediction.shape[1]])
-
-            voxel = tf.math.argmax(prediction, axis = 2)
-            voxel = tf.where(tf.equal(voxel, 0), tf.ones_like(voxel)*7, voxel)
-        
-        elif len(prediction.shape) == 4 and out_classes == True:
-            print('ok')
-            voxel_p = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2], prediction.shape[3]])
-            voxel = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2], prediction.shape[3]])
-            voxel_rgba = np.zeros([prediction.shape[0],prediction.shape[1],prediction.shape[2], prediction.shape[3], 4], np.uint8)
-
-            voxel_p = tf.math.argmax(prediction, axis = 3)
-            voxel_p = tf.where(tf.equal(voxel_p, 0), tf.ones_like(voxel_p)*7, voxel_p)
-            voxel[:,:,:,0] = tf.where(tf.equal(voxel_p, 7), tf.ones_like(voxel_p)*255, voxel[:,:,:,0])
-            voxel[:,:,:,1] = tf.where(tf.equal(voxel_p, 1), tf.ones_like(voxel_p)*255, voxel[:,:,:,1])
-            voxel[:,:,:,2] = tf.where(tf.equal(voxel_p, 2), tf.ones_like(voxel_p)*255, voxel[:,:,:,2])
-            voxel[:,:,:,3] = tf.where(tf.equal(voxel_p, 3), tf.ones_like(voxel_p)*255, voxel[:,:,:,3])
-            voxel[:,:,:,4] = tf.where(tf.equal(voxel_p, 4), tf.ones_like(voxel_p)*255, voxel[:,:,:,4])
-            voxel[:,:,:,5] = tf.where(tf.equal(voxel_p, 5), tf.ones_like(voxel_p)*255, voxel[:,:,:,5])
-            voxel[:,:,:,6] = tf.where(tf.equal(voxel_p, 6), tf.ones_like(voxel_p)*255, voxel[:,:,:,6])
-
-
-            voxel_rgba[:,:,:,0,0] = voxel[:,:,:,0]*rgba[0]
-            voxel_rgba[:,:,:,0,1] = voxel[:,:,:,0]*rgba[1]
-            voxel_rgba[:,:,:,0,2] = voxel[:,:,:,0]*rgba[2]
-            voxel_rgba[:,:,:,0,3] = voxel[:,:,:,0]*rgba[3]
-            voxel_rgba[:,:,:,1,0] = voxel[:,:,:,1]*rgba[0]
-            voxel_rgba[:,:,:,1,1] = voxel[:,:,:,1]*rgba[1]
-            voxel_rgba[:,:,:,1,2] = voxel[:,:,:,1]*rgba[2]
-            voxel_rgba[:,:,:,1,3] = voxel[:,:,:,1]*rgba[3]
-            voxel_rgba[:,:,:,2,0] = voxel[:,:,:,2]*rgba[0]
-            voxel_rgba[:,:,:,2,1] = voxel[:,:,:,2]*rgba[1]
-            voxel_rgba[:,:,:,2,2] = voxel[:,:,:,2]*rgba[2]
-            voxel_rgba[:,:,:,2,3] = voxel[:,:,:,2]*rgba[3]
-            voxel_rgba[:,:,:,3,0] = voxel[:,:,:,3]*rgba[0]
-            voxel_rgba[:,:,:,3,1] = voxel[:,:,:,3]*rgba[1]
-            voxel_rgba[:,:,:,3,2] = voxel[:,:,:,3]*rgba[2]
-            voxel_rgba[:,:,:,3,3] = voxel[:,:,:,3]*rgba[3]            
-            voxel_rgba[:,:,:,4,0] = voxel[:,:,:,4]*rgba[0]
-            voxel_rgba[:,:,:,4,1] = voxel[:,:,:,4]*rgba[1]
-            voxel_rgba[:,:,:,4,2] = voxel[:,:,:,4]*rgba[2]
-            voxel_rgba[:,:,:,4,3] = voxel[:,:,:,4]*rgba[3]
-            voxel_rgba[:,:,:,5,0] = voxel[:,:,:,5]*rgba[0]
-            voxel_rgba[:,:,:,5,1] = voxel[:,:,:,5]*rgba[1]
-            voxel_rgba[:,:,:,5,2] = voxel[:,:,:,5]*rgba[2]
-            voxel_rgba[:,:,:,5,3] = voxel[:,:,:,5]*rgba[3]
-            voxel_rgba[:,:,:,6,0] = voxel[:,:,:,6]*rgba[0]
-            voxel_rgba[:,:,:,6,1] = voxel[:,:,:,6]*rgba[1]
-            voxel_rgba[:,:,:,6,2] = voxel[:,:,:,6]*rgba[2]
-            voxel_rgba[:,:,:,6,3] = voxel[:,:,:,6]*rgba[3]
-
-            voxel_rgba = np.rot90(voxel_rgba, 2)
-
-            areas = tf.math.count_nonzero(voxel, axis = (1,2))
-
-        return voxel_rgba, areas
     
     def time(self, *args):
         time.sleep(1)

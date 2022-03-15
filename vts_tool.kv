@@ -30,7 +30,7 @@
 
     BoxLayout:                          #connection part
         spacing: 5
-        size_hint: (.5,1)
+        size_hint: (.8,1)
         orientation: "vertical"
         BoxLayout: 
             spacing: 15
@@ -82,64 +82,75 @@
                     on_press: root.Prediction()
 
             BoxLayout:
-                id: _toggle
-                spacing: 5
-                orientation:"vertical"
-                disabled: True
-                ToggleButton:
-                    id: _bk
-                    text: 'BK'
-                    state: 'normal'
-                    on_press: root.Plotter(clear = False)
-                ToggleButton:
-                    id: _ul
-                    text: 'UL'
-                    state: 'normal'
-                    on_press: root.Plotter(clear = False)
-                ToggleButton:
-                    id: _hp
-                    text: 'HP'
-                    state: 'normal'
-                    on_press: root.Plotter(clear = False)
-                ToggleButton:
-                    id: _sp
-                    text: 'SP'
-                    state: 'normal'
-                    on_press: root.Plotter(clear = False)
-                ToggleButton:
-                    id: _to
-                    text: 'TO'
-                    state: 'normal'
-                    on_press: root.Plotter(clear = False)
-                ToggleButton:
-                    id: _ll
-                    text: 'LL'
-                    state: 'normal'
-                    on_press: root.Plotter(clear = False)
-                ToggleButton:
-                    id: _he
-                    text: 'HE'
-                    state: 'normal'
-                    on_press: root.Plotter(clear = False)
+                orientation:"horizontal"
+                BoxLayout:
+                    id: _toggle
+                    spacing: 5
+                    orientation:"vertical"
+                    disabled: True
+                    ToggleButton:
+                        id: _bk
+                        size_hint: (0.7, 1)
+                        text: 'BACKGROUND'
+                        state: 'normal'
+                        on_press: root.Plotter(clear = False)
+                    ToggleButton:
+                        id: _ul
+                        size_hint: (0.7, 1)
+                        text: 'UPPER LIP'
+                        state: 'normal'
+                        on_press: root.Plotter(clear = False)
+                    ToggleButton:
+                        id: _hp
+                        size_hint: (0.7, 1)
+                        text: 'HARD PALATE'
+                        state: 'normal'
+                        on_press: root.Plotter(clear = False)
+                    ToggleButton:
+                        id: _sp
+                        size_hint: (0.7, 1)
+                        text: 'SOFT PALATE'
+                        state: 'normal'
+                        on_press: root.Plotter(clear = False)
+                    ToggleButton:
+                        id: _to
+                        size_hint: (0.7, 1)
+                        text: 'TONGUE'
+                        state: 'normal'
+                        on_press: root.Plotter(clear = False)
+                    ToggleButton:
+                        id: _ll
+                        size_hint: (0.7, 1)
+                        text: 'LOWER LIP'
+                        state: 'normal'
+                        on_press: root.Plotter(clear = False)
+                    ToggleButton:
+                        id: _he
+                        size_hint: (0.7, 1)
+                        text: 'HEAD'
+                        state: 'normal'
+                        on_press: root.Plotter(clear = False)
+                BoxLayout:
             
             BoxLayout:
-                size_hint: (1,0.5)
+                size_hint: (1,0.8)
                 Graph:
                     id: _graph
                     disabled: True
-                    padding: 0
+                    padding: 5
                     size_hint_x: 1
                     size_hint_y: 1
                     xlabel: 'Frames'
                     ylabel: '[A]'
-                    x_grid:False
-                    y_grid:True
-                    x_ticks_major: 0
-                    y_ticks_major: 0
-                    x_grid_label: False
-                    y_grid_label: False
+                    x_grid: True
+                    y_grid: True
+                    x_ticks_major:
+                    y_ticks_major: 
+                    x_grid_label: True
+                    y_grid_label: True
                     xmin:0
                     ymin:0  
+                    border_color: 0.3,0.3,0.3,0
                     background_color: 0.5, 0.5, 0.5, 1
 
 
