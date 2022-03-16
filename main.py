@@ -232,7 +232,7 @@ class Home (BoxLayout):
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
 
 
-        images_to_keep = 5  #all is 354
+        images_to_keep = 3  #all is 354
         self.slider.max = images_to_keep-1
         self.slider.min = 0
 
@@ -317,76 +317,93 @@ class Home (BoxLayout):
             Color(1, 1, 1, 1)  
             self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
             if self.bk.state == 'down' : 
-                Color(0.5, 1, 1, 0.3)
+                Color(0, 1, 0, 0.3)
+                #Color(0.5, 1, 1, 0.3)
                 self.image_set.append(Rectangle(texture=textureBK, pos=self.mri.pos, size=self.mri.size,))
             if self.ul.state == 'down': 
-                Color(1, 0.5, 1, 0.3)
+                Color(0, 0, 1, 0.3)
+                #Color(1, 0.5, 1, 0.3)
                 self.image_set.append(Rectangle(texture=textureUL, pos=self.mri.pos, size=self.mri.size,))
             if self.hp.state == 'down': 
-                Color(1, 1, 0.5, 0.3)
+                Color(1, 0, 0, 0.3)
+                #Color(1, 1, 0.5, 0.3)
                 self.image_set.append(Rectangle(texture=textureHP, pos=self.mri.pos, size=self.mri.size,))
             if self.sp.state == 'down': 
-                Color(0.5, 1, 0.5, 0.3)
+                Color(1, 1, 0, 0.3)
+                #Color(0.5, 1, 0.5, 0.3)
                 self.image_set.append(Rectangle(texture=textureSP, pos=self.mri.pos, size=self.mri.size,))
             if self.to.state == 'down': 
-                Color(0.5, 0.5, 1, 0.3)
+                Color(1, 0.07, 0.7, 0.3)
+                #Color(0.5, 0.5, 1, 0.3)
                 self.image_set.append(Rectangle(texture=textureTO, pos=self.mri.pos, size=self.mri.size,))
             if self.ll.state == 'down': 
-                Color(1, 0.5, 0.5, 0.3)
+                Color(0.6, 0.17, 0.93, 0.3)
+                #Color(1, 0.5, 0.5, 0.3)
                 self.image_set.append(Rectangle(texture=textureLL, pos=self.mri.pos, size=self.mri.size,))
             if self.he.state == 'down': 
-                Color(0.7, 1, 0.7, 0.3)
+                Color(0.69, 0.13, 0.13, 0.3)
+                #Color(0.7, 1, 0.7, 0.3)
                 self.image_set.append(Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,))
+
+
+        self.graph.border_color = (0.3,0.3,0.3,1)
 
         #They must be outside of with canvas:, otherwise double line
         if self.bk.state == 'down' : 
-            self.plot_bk = MeshLinePlot(color=[0.5, 1, 1, 1])
+            self.plot_bk = MeshLinePlot(color=[0, 1, 0, 1])
             self.plot_bk.points = [(x_0, self.areas[x_0,0].numpy()/100) for x_0 in x]
             self.graph_plot.append(self.plot_bk)
             ymax.append(int(np.max(self.areas[:,0])/100 *2))
         if self.ul.state == 'down': 
-            self.plot_ul = MeshLinePlot(color=[1, 0.5, 1, 1])
+            self.plot_ul = MeshLinePlot(color=[0, 0, 1, 1])
             self.plot_ul.points = [(x_1, self.areas[x_1,1].numpy()/100) for x_1 in x]
             self.graph_plot.append(self.plot_ul)
             ymax.append(int(np.max(self.areas[:,1])/100 *2))
         if self.hp.state == 'down': 
-            self.plot_hp = MeshLinePlot(color=[1, 1, 0.5, 1])
+            self.plot_hp = MeshLinePlot(color=[1, 0, 0, 1])
             self.plot_hp.points = [(x_2, self.areas[x_2,2].numpy()/100) for x_2 in x]
             self.graph_plot.append(self.plot_hp)
             ymax.append(int(np.max(self.areas[:,2])/100 *2))
         if self.sp.state == 'down': 
-            Color(0.5, 1, 0.5, 0.3)
-            self.plot_sp = MeshLinePlot(color=[0.5, 1, 0.5, 1])
+            self.plot_sp = MeshLinePlot(color=[1, 1, 0, 1])
             self.plot_sp.points = [(x_3, self.areas[x_3,3].numpy()/100) for x_3 in x]
             self.graph_plot.append(self.plot_sp)
             ymax.append(int(np.max(self.areas[:,3])/100 *2))
         if self.to.state == 'down': 
-            self.plot_to = MeshLinePlot(color=[0.5, 0.5, 1, 1])
+            self.plot_to = MeshLinePlot(color=[1, 0.07, 0.7, 1])
             self.plot_to.points = [(x_4, self.areas[x_4,4].numpy()/100) for x_4 in x]
             self.graph_plot.append(self.plot_to)
             ymax.append(int(np.max(self.areas[:,4])/100 *2))
         if self.ll.state == 'down': 
-            self.plot_ll = MeshLinePlot(color=[1, 0.5, 0.5, 1])
+            self.plot_ll = MeshLinePlot(color=[0.6, 0.17, 0.93, 1])
             self.plot_ll.points = [(x_5, self.areas[x_5,5].numpy()/100) for x_5 in x]
             self.graph_plot.append(self.plot_ll)
             ymax.append(int(np.max(self.areas[:,5])/100 *2))
-        if self.he.state == 'down': 
-            self.plot_he = LinePlot(color=[0.7, 1, 0.7, 1])
+        if self.he.state == 'down':
+            self.plot_he = LinePlot(color=[0.69, 0.13, 0.13, 1])
             self.plot_he.points = [(x_6, self.areas[x_6,6].numpy()/100) for x_6 in x]
             self.graph_plot.append(self.plot_he)
             ymax.append(int(np.max(self.areas[:,6])/100 *2))
 
+        
         if ymax:
             ass_ymax = np.max(np.asarray(ymax))
             self.graph.ymax = float(ass_ymax)
-            self.graph.y_ticks_major = float(ass_ymax)
+            #self.graph.y_ticks_major = float(ass_ymax/10)
+        else:
+            self.graph.ymax = 10.0
+
         if  self.areas[:frame,0].shape != 0:
             self.graph.xmax = float(self.areas[:frame,0].shape[0])
-            self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])
+            if frame == 0:
+                self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])/1
+            elif frame > 0 and frame < 20:
+                self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])/frame
+            elif frame >= 10:
+                self.graph.x_ticks_major = 20
         else:
+            self.graph.x_ticks_major = 1
             self.graph.xmax = 1.0
-
-        self.graph.border_color = (0.3,0.3,0.3,1)
 
 
         for g in self.graph_plot:
@@ -420,7 +437,6 @@ class Home (BoxLayout):
                 self.distances.append(Line(points = [self.mri.x1, self.mri.y1, self.mri.x0 , self.mri.y0 ], width = 1.5))
                 self.mri.state = 0
                 self.check_distances = True
-                   
     
     def time(self, *args):
         time.sleep(1)

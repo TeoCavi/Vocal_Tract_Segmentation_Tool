@@ -179,7 +179,7 @@ def prediction(fpath,images_to_keep, model_path, model_name):
             predictions[i,:,:,:] = interpreter.get_tensor(output_details[0]['index'])
     elif model_ext == '.h5':
         model = tf.keras.models.load_model(os.path.join(model_path, model_name), compile = False)
-        predictions = model.predict(image, batch_size = 16)
+        predictions = model.predict(image, batch_size = 32)
 
     time_after = time.time()
     tot_time = time_after - time_before

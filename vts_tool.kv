@@ -1,7 +1,7 @@
 <Home>:
     canvas.before:
         Color:
-            rgba: 0.5, 0.5, 0.5, 1
+            rgba: 0.36, 0.54, 0.6, 1
         Rectangle:
             pos: self.pos
             size: self.size 
@@ -41,15 +41,23 @@
                 size_hint:(1,0.15)
                 orientation:"vertical"
                 BoxLayout:
-                    orientation:"horizontal"           
+                    orientation:"horizontal"
+                    Label:
+                        size_hint: (0.4, 1)
+                        text: "Video:"
+                        font_size:25          
                     Button:    
                         id: _sbj
                         text: 'Select Video'
+                        font_size:20 
                         text_size: self.size
                         halign: "center"
                         valign: "center"
                         press_v: False
                         on_press: root.SetupVideo()
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        
 
             BoxLayout:
                 spacing: 5
@@ -60,10 +68,12 @@
                     Label:
                         size_hint: (0.4, 1)
                         text: "Model:"
+                        font_size:25 
                     Spinner:
                         id: _model
                         text:
                         text_size: self.size
+                        font_size:20
                         halign: "center"
                         valign: "center"
                         disabled: True
@@ -71,87 +81,121 @@
                         press: False
                         on_text: self.click = True
                         on_press: self.press = True
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
 
                 Button:
                     id: _pred
                     text: "Predict"
                     text_size: self.size
+                    font_size:30
                     halign: "center"
                     valign: "center"
                     disabled: True
                     on_press: root.Prediction()
+                    background_normal: ''
+                    background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
 
             BoxLayout:
                 orientation:"horizontal"
                 BoxLayout:
                     id: _toggle
-                    spacing: 5
+                    spacing: 2.5
                     orientation:"vertical"
                     disabled: True
                     ToggleButton:
                         id: _bk
-                        size_hint: (0.7, 1)
+                        size_hint: (0.7, 0.8)
+                        font_size:20
                         text: 'BACKGROUND'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
                     ToggleButton:
                         id: _ul
-                        size_hint: (0.7, 1)
+                        size_hint: (0.7, 0.8)
+                        font_size:20
                         text: 'UPPER LIP'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
                     ToggleButton:
                         id: _hp
-                        size_hint: (0.7, 1)
+                        size_hint: (0.7, 0.8)
+                        font_size:20
                         text: 'HARD PALATE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
                     ToggleButton:
                         id: _sp
-                        size_hint: (0.7, 1)
+                        size_hint: (0.7, 0.8)
+                        font_size:20
                         text: 'SOFT PALATE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
                     ToggleButton:
                         id: _to
-                        size_hint: (0.7, 1)
+                        size_hint: (0.7, 0.8)
+                        font_size:20
                         text: 'TONGUE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
                     ToggleButton:
                         id: _ll
-                        size_hint: (0.7, 1)
+                        size_hint: (0.7, 0.8)
+                        font_size:20
                         text: 'LOWER LIP'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
                     ToggleButton:
                         id: _he
-                        size_hint: (0.7, 1)
+                        size_hint: (0.7, 0.8)
                         text: 'HEAD'
+                        font_size:20
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_normal: ''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
                 BoxLayout:
             
             BoxLayout:
-                size_hint: (1,0.8)
-                Graph:
-                    id: _graph
-                    disabled: True
-                    padding: 5
-                    size_hint_x: 1
-                    size_hint_y: 1
-                    xlabel: 'Frames'
-                    ylabel: '[A]'
-                    x_grid: True
-                    y_grid: True
-                    x_ticks_major:
-                    y_ticks_major: 
-                    x_grid_label: True
-                    y_grid_label: True
-                    xmin:0
-                    ymin:0  
-                    border_color: 0.3,0.3,0.3,0
-                    background_color: 0.5, 0.5, 0.5, 1
+                size_hint: (1,1.4)
+                ScrollView:
+                    scrool_y:False
+                    scrool_x:True
+                    Graph:
+                        id: _graph
+                        disabled: True
+                        padding: 5
+                        size_hint_x: 1
+                        size_hint_y: 1
+                        xlabel: 'Frames'
+                        ylabel: 'A'
+                        label_options: {'color': (0.12,0.18,0.20,1)}
+                        ymin:0.09999
+                        ymax:10
+                        xmin:0
+                        xmax:1
+                        ylog: True 
+                        x_ticks_major: 1
+                        y_ticks_major: 1
+                        y_ticks_minor: 10
+                        x_grid_label: True
+                        y_grid_label: True
+                        x_grid: False
+                        y_grid: False
+                        border_color: 0.12,0.18,0.20,1
+                        background_color: 0.87, 0.91, 0.92, 1 
 
 
 
@@ -164,28 +208,25 @@
         BoxLayout:
             orientation: "horizontal"
             padding: (0,0)
-            size_hint:(1,.07)
-            ScrollView:
+            size_hint:(1,.075)
+            BoxLayout:
                 spacing: 5
                 size_hint:(1,1)
-                scrool_y:True
-                scrool_x:False
                 canvas.before:
                     Color:  
-                        rgba: 1, 1, 1, 0.7  
+                        rgba: 0.87, 0.91, 0.92, 1 
                     Rectangle:  
                         pos: self.pos 
                         size: self.size
                 Label:
                     id: _msg
-                    text: "Welcome, Select one subject" 
-                    color: (0,0,0,1)
+                    text: "Select video and model" 
+                    color: (0.12,0.18,0.20,1)
                     text_size: self.width, None
-                    font_size:20
-                    size_hint_y: None
+                    font_size:25
                     height: self.texture_size[1]
-                    halign: 'left'
-                    valign: 'middle'
+                    halign: 'center'
+                    valign: 'center'
         DrawScreen:
             id: _mri
             disabled: True
@@ -215,11 +256,11 @@
                 pos: self.pos
                 frames:
                 state: 'normal'
-                color: {'normal': (1,1,1,1), 'down': (0,1,0,1)} [self.state] 
-                    
+                background_normal: ''
+                background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,0,1) 
                 canvas.after:
                     Color:
-                        rgba: 0.5, 0.5, 0.5, 1
+                        rgba: 0.36, 0.54, 0.6, 1
                     Triangle:
                         points: self.pos[0], self.pos[1]+_play.height, self.pos[0]+_play.width, self.pos[1]+_play.height, self.pos[0]+_play.width, self.pos[1]+_play.height/2
                     Triangle:
@@ -230,6 +271,8 @@
                 orientation: 'horizontal'
                 disabled: True
                 on_value: root.Plotter(clear = True)
+                background_normal: ''
+                background_color: 0.12,0.18,0.20,1
             Label:
                 size_hint:(0.1,1)
                 text: str(int(_slider.value))
