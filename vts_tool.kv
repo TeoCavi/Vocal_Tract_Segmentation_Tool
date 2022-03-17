@@ -21,11 +21,20 @@
     sp: _sp
     to: _to
     ll: _ll
+    heg: _heg
+    bkg: _bkg
+    ulg: _ulg
+    hpg: _hpg
+    spg: _spg
+    tog: _tog
+    llg: _llg
     he: _he
     toggle: _toggle
     model: _model
     play: _play
     graph: _graph
+    switch: _switch
+    textbar: _textbar
 
 
     BoxLayout:                          #connection part
@@ -38,16 +47,17 @@
             orientation:"vertical"
             BoxLayout:
                 spacing: 5
-                size_hint:(1,0.15)
+                size_hint:(1,0.5)
                 orientation:"vertical"
                 BoxLayout:
                     orientation:"horizontal"
                     Label:
-                        size_hint: (0.4, 1)
+                        size_hint: (0.35, 1)
                         text: "Video:"
                         font_size:25          
                     Button:    
                         id: _sbj
+                        size_hint: (0.65, 1)
                         text: 'Select Video'
                         font_size:20 
                         text_size: self.size
@@ -57,21 +67,16 @@
                         on_press: root.SetupVideo()
                         background_normal: ''
                         background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
-                        
-
-            BoxLayout:
-                spacing: 5
-                size_hint:(1,.3)
-                orientation:"vertical"
                 BoxLayout:
                     orientation:"horizontal"
                     Label:
-                        size_hint: (0.4, 1)
+                        size_hint: (0.35, 1)
                         text: "Model:"
                         font_size:25 
                     Spinner:
                         id: _model
-                        text:
+                        size_hint: (0.65, 1)
+                        text: 'Select Model'
                         text_size: self.size
                         font_size:20
                         halign: "center"
@@ -86,6 +91,7 @@
 
                 Button:
                     id: _pred
+                    size_hint: (1, 1)
                     text: "Predict"
                     text_size: self.size
                     font_size:30
@@ -99,75 +105,142 @@
             BoxLayout:
                 orientation:"horizontal"
                 BoxLayout:
+                    size_hint: (0.1, 1)
+                BoxLayout:
+                    size_hint: (0.5, 1)
                     id: _toggle
-                    spacing: 2.5
+                    spacing: 1
                     orientation:"vertical"
                     disabled: True
+                    Label:
+                        size_hint: (1, 0.04)
+                        text: "Labels:"
+                        font_size:25
                     ToggleButton:
                         id: _bk
-                        size_hint: (0.7, 0.8)
+                        size_hint: (1, 0.045)
                         font_size:20
                         text: 'BACKGROUND'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_down:''
                         background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0.4, 0.2, 1)
                     ToggleButton:
                         id: _ul
-                        size_hint: (0.7, 0.8)
+                        size_hint: (1, 0.045)
                         font_size:20
                         text: 'UPPER LIP'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
                         background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        background_down:''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0, 1, 1)
                     ToggleButton:
                         id: _hp
-                        size_hint: (0.7, 0.8)
+                        size_hint: (1, 0.045)
                         font_size:20
                         text: 'HARD PALATE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_down:''
                         background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0, 0, 1)
                     ToggleButton:
                         id: _sp
-                        size_hint: (0.7, 0.8)
+                        size_hint: (1, 0.045)
                         font_size:20
                         text: 'SOFT PALATE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_down:''
                         background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.9, 0.7, 0, 1)
                     ToggleButton:
                         id: _to
-                        size_hint: (0.7, 0.8)
+                        size_hint: (1, 0.045)
                         font_size:20
                         text: 'TONGUE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_down:''
                         background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0.07, 0.7, 1)
                     ToggleButton:
                         id: _ll
-                        size_hint: (0.7, 0.8)
+                        size_hint: (1, 0.045)
                         font_size:20
                         text: 'LOWER LIP'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
+                        background_down:''
                         background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.6, 0.17, 0.93, 1)
                     ToggleButton:
                         id: _he
-                        size_hint: (0.7, 0.8)
+                        size_hint: (1, 0.045)
                         text: 'HEAD'
                         font_size:20
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
-                        background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        background_down:''
+                        background_normal:''
+                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.69, 0.13, 0.13, 1)
                 BoxLayout:
-            
+                    size_hint: (0.3, 1)
+                    id: _switch
+                    spacing: 1
+                    orientation:"vertical"
+                    disabled: True
+                    Label:
+                        size_hint: (1, 0.04)
+                        text: "Graph:"
+                        font_size:25
+                    CheckBox:
+                        id: _bkg
+                        size_hint: (1, 0.045)
+                        active: False
+                        on_active: root.Plotter(clear = False)
+                        color: (0.12,0.18,0.20,1)
+                    CheckBox:
+                        id: _ulg
+                        size_hint: (1, 0.045)
+                        active: False
+                        on_active: root.Plotter(clear = False)
+                        color: (0.12,0.18,0.20,1)
+                    CheckBox:
+                        id: _hpg
+                        size_hint: (1, 0.045)
+                        active: False
+                        on_active: root.Plotter(clear = False)
+                        color: (0.12,0.18,0.20,1)
+                    CheckBox:
+                        id: _spg
+                        size_hint: (1, 0.045)
+                        active: False
+                        on_active: root.Plotter(clear = False)
+                        color: (0.12,0.18,0.20,1)
+                    CheckBox:
+                        id: _tog
+                        size_hint: (1, 0.045)
+                        active: False
+                        on_active: root.Plotter(clear = False)
+                        color: (0.12,0.18,0.20,1)
+                    CheckBox:
+                        id: _llg
+                        size_hint: (1, 0.045)
+                        active: False
+                        on_active: root.Plotter(clear = False)
+                        color: (0.12,0.18,0.20,1)
+                    CheckBox:
+                        id: _heg
+                        size_hint: (1, 0.045)
+                        active: False
+                        on_active: root.Plotter(clear = False)
+                        color: (0.12,0.18,0.20,1)
+                BoxLayout:
+                    size_hint: (0.1, 1)
+        
             BoxLayout:
                 size_hint: (1,1.4)
                 ScrollView:
@@ -180,7 +253,7 @@
                         size_hint_x: 1
                         size_hint_y: 1
                         xlabel: 'Frames'
-                        ylabel: 'A'
+                        ylabel: 'Area [log]'
                         label_options: {'color': (0.12,0.18,0.20,1)}
                         ymin:0.09999
                         ymax:10
@@ -198,11 +271,10 @@
                         background_color: 0.87, 0.91, 0.92, 1 
 
 
-
     BoxLayout:                          #data visualization
         orientation:"vertical"
-        size_hint:(1,1)
         spacing: 5
+        size_hint:(1,1)
         id: _mainbx
         rect_image: self.rect_image
         BoxLayout:
@@ -211,7 +283,7 @@
             size_hint:(1,.075)
             BoxLayout:
                 spacing: 5
-                size_hint:(1,1)
+                size_hint:(0.925,1)
                 canvas.before:
                     Color:  
                         rgba: 0.87, 0.91, 0.92, 1 
@@ -227,6 +299,18 @@
                     height: self.texture_size[1]
                     halign: 'center'
                     valign: 'center'
+            BoxLayout:
+                id: _textbar
+                size_hint:(0.075,1)
+                spacing: 5
+                canvas.before:
+                    Color:  
+                        rgba: 0.87, 0.91, 0.92, 1 
+                    Rectangle:  
+                        pos: self.pos 
+                        size: self.size
+                    
+
         DrawScreen:
             id: _mri
             disabled: True
@@ -240,7 +324,6 @@
             x1: 0
             y1: 0
             orientation: "horizontal"
-            padding:5
             spacing:5
             on_touch_up: if self.disabled == False and self.check == True: root.Draw()
 
@@ -252,7 +335,7 @@
                 id: _play
                 disabled: True
                 size: self.size
-                size_hint:(0.05,1)
+                size_hint:(0.06,1)
                 pos: self.pos
                 frames:
                 state: 'normal'

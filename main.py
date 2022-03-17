@@ -1,11 +1,12 @@
-from turtle import color, home
+from turtle import color, home, pos
 import time
+from cv2 import sqrt
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from tensorflow.python.client import device_lib 
 from PIL import Image
 import tkinter
-from tkinter import filedialog
+from tkinter import Variable, filedialog
 import kivy
 from threading import Thread
 from multiprocessing import Process
@@ -33,7 +34,8 @@ from kivy.config import Config
 from utils import prediction
 
 import os
-UPDATING_FREQ = 0.001
+class Global():
+    update_freq = 0.01
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #decommentare per escludere la GPU
 print(device_lib.list_local_devices())
@@ -44,12 +46,11 @@ class ThreadWithReturnValue(Thread):
                  args=(), kwargs={}, Verbose = None):
         Thread.__init__(self, group, target, name, args, kwargs)
         self._return = None
+
     def run(self):
         if self._target is not None:
             self._return = self._target(*self._args)#, **self._kwrags)
 
-    # def is_alive(self) -> bool:
-    #     return super().is_alive()
     def join(self, *args):
         Thread.join(self, *args)
         return self._return
@@ -86,7 +87,10 @@ class Home (BoxLayout):
 
     def __init__(self, **kwargs):
         self.loading_bar = 0
+        self.load = 0
         self.thread_pred_start = 0
+        self.loading_fig = []
+        Global()
         super().__init__(**kwargs)
 
     def update(self, *args):
@@ -115,10 +119,9 @@ class Home (BoxLayout):
             self.model.click = False
             self.mri.canvas.after.clear()
             self.mri.canvas.before.clear()
-            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.graph.disabled = self.play.disabled = True
+            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.graph.disabled = self.play.disabled = self.switch.disabled = True
             self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
             self.model.press = False
-            self.toggle.disabled
                   
         if self.model.click == True:
             self.pred.disabled = False
@@ -131,9 +134,7 @@ class Home (BoxLayout):
                 el.pos = self.mri.pos
                 el.size = self.mri.size
             
-
             if self.check_distances == True:
-
                 print(self.initial_dim)
                 print(self.size)
                 print(self.size[0])
@@ -141,21 +142,20 @@ class Home (BoxLayout):
                 stretch = (self.size[0]/self.initial_dim[0], self.size[1]/self.initial_dim[1])
                 print(self.initial_pos)
                 print(self.mri.pos)
-                # delta = [self.initial_pos[0]-self.mri.pos[0], self.initial_pos[1]-self.mri.pos[1]]
-                # print(delta)
-                num = 0
-                for ds in self.distances:
-                    if (num % 2) == 0: #Ellipses
-                        print(ds.pos)
-                        ds.pos = (ds.pos[0]*stretch[0], ds.pos[1]*stretch[1])
-                        print(ds.pos)
-                    else:
-                        print('before',ds.points)
-                        ds.points = (ds.points[0]*stretch[0], ds.points[1]*stretch[1], ds.points[2]*stretch[0], ds.points[3]*stretch[1])
-                        ds.width = ds.width*stretch[1]
-                        print('after', ds.points)
-                    num = num + 1
-            
+
+                ds = self.distances
+                for i in range(0, len(self.distances), 3):
+                    #Ellipses
+                    ds[i].pos = (ds[i].pos[0]*stretch[0], ds[i].pos[1]*stretch[1])
+                    print(ds[i].pos)
+
+                    #Lines
+                    ds[i+1].points = (ds[i+1].points[0]*stretch[0], ds[i+1].points[1]*stretch[1], ds[i+1].points[2]*stretch[0], ds[i+1].points[3]*stretch[1])
+                    ds[i+1].width = ds[i+1].width*stretch[1]
+
+                    #Labels
+                    ds[i+2].pos = (ds[i+2].pos[0]*stretch[0], ds[i+2].pos[1]*stretch[1])
+
             self.initial_dim = self.size.copy()
         
         if self.play.state == 'down':
@@ -170,17 +170,38 @@ class Home (BoxLayout):
 
         if self.thread_pred_start == 1:
             # if self.thread_pred.run() == None:
-            if self.loading_bar < 7:
-                self.msg.text = self.msg.text + '.'
-                self.loading_bar = self.loading_bar + 1
-            else:
-                self.msg.text = self.msg_loading
+            self.loading_bar = self.loading_bar + 1
+            if self.loading_bar == 1:
+                self.load = self.load+1
+                with self.textbar.canvas:
+                    self.textbar.canvas.clear()
+                    Color(0.12,0.18,0.20,1)
+                    if self.load <= 360:
+                        Ellipse(pos = (self.textbar.pos[0]+(self.textbar.height/2)-40/2, 
+                                        self.textbar.pos[1]+(self.textbar.width/2)-40/2), 
+                                        size= (40,40), angle_start = 0, 
+                                        angle_end = self.load)
+                    elif self.load > 360 and self.load <= 720:
+                        Ellipse(pos = (self.textbar.pos[0]+(self.textbar.height/2)-40/2, 
+                                        self.textbar.pos[1]+(self.textbar.width/2)-40/2), 
+                                        size= (40,40), angle_start = self.load-360, 
+                                        angle_end = 360)
+                        if self.load == 720:
+                            self.load = 0
+                    Color(0.87, 0.91, 0.92, 1 )
+                    Ellipse(pos = (self.textbar.pos[0]+(self.textbar.height/2)-30/2, self.textbar.pos[1]+(self.textbar.width/2)-30/2),
+                            size = (30,30),
+                            angle_start = 0,
+                            angle_end = 360,)
                 self.loading_bar = 0
 
             if self.thread_pred.is_alive() == False:
-                print('in')
+                with self.textbar.canvas:
+                    self.textbar.canvas.clear()
                 self.plot_mri, self.image, self.predictions, self.areas = self.thread_pred.join()
-                
+                Global().update_freq = 0.01
+                self.msg.text = self.sbj.text + ' Segmentation'
+
                 self.tot_frames = self.areas[:,0].shape[0] #extract frames from areas
                 self.play.frames = self.tot_frames-1
                 
@@ -189,6 +210,7 @@ class Home (BoxLayout):
 
                 self.slider.disabled = False
                 self.toggle.disabled = False
+                self.switch.disabled = False
                 self.play.disabled = False
                 self.mri.disabled = False
                 self.graph.disabled = False
@@ -202,7 +224,7 @@ class Home (BoxLayout):
 
                 self.counter = 0
                 needed_freq = 1/25 #frames
-                self.max_count = (needed_freq/UPDATING_FREQ)
+                self.max_count = (needed_freq/Global().update_freq)
                 texture = Texture.create(size=(256, 256), colorfmt='rgb')
                 texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
                 with self.mri.canvas.before:
@@ -216,7 +238,7 @@ class Home (BoxLayout):
     def SetupVideo(self, *args):
         self.mri.canvas.after.clear()
         self.mri.canvas.before.clear()
-        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = self.graph.disabled = self.play.disabled = True
+        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = self.graph.disabled = self.play.disabled = self.switch.disabled = True
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
         self.sbj.press_v = True
         
@@ -228,53 +250,18 @@ class Home (BoxLayout):
         self.model.click = False
         self.mri.canvas.after.clear()
         self.mri.canvas.before.clear()
-        self.slider.disabled = self.toggle.disabled = self.play.disabled = self.mri.disabled = self.graph.disabled = True
+        self.slider.disabled = self.toggle.disabled = self.play.disabled = self.mri.disabled = self.graph.disabled = self.switch.disabled = True
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
 
 
         images_to_keep = 3  #all is 354
         self.slider.max = images_to_keep-1
         self.slider.min = 0
-
+        Global().update_freq = 5
         self.thread_pred = ThreadWithReturnValue(target=prediction, args=(self.fpath, images_to_keep, model_path, self.pred_model), kwargs={})
         self.thread_pred.daemon = True
         self.thread_pred.start()
         self.thread_pred_start = 1
-
-        # self.plot_mri, self.image, self.predictions, self.areas = prediction(fpath = self.fpath, 
-        #                                                                      images_to_keep = images_to_keep, 
-        #                                                                      model_path = model_path, 
-        #                                                                      model_name = self.pred_model)
-
-        # self.tot_frames = self.areas[:,0].shape[0] #extract frames from areas
-        # self.play.frames = self.tot_frames-1
-
-        
-        # print(self.predictions.shape)
-        # print(self.areas.shape)
-
-        # self.slider.disabled = False
-        # self.toggle.disabled = False
-        # self.play.disabled = False
-        # self.mri.disabled = False
-        # self.graph.disabled = False
-
-        # self.image_set = []
-        # self.distances = []
-        
-        # self.initial_dim = 0
-        # self.check_distances = False
-        # self.graph_plot = [None]
-
-        # self.counter = 0
-        # needed_freq = 1/25 #frames
-        # self.max_count = (needed_freq/UPDATING_FREQ)
-        # texture = Texture.create(size=(256, 256), colorfmt='rgb')
-        # texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
-        # with self.mri.canvas.before:
-        #     self.mri.canvas.clear()
-        #     Color(1, 1, 1, 1)  
-        #     self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
 
     def Plotter(self, clear, *args):
 
@@ -299,9 +286,11 @@ class Home (BoxLayout):
         textureHE = Texture.create(size=(256, 256), colorfmt='rgba')
         textureHE.blit_buffer(self.predictions[frame,:,:,6,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
 
-        for g in self.graph_plot:
-            self.graph.remove_plot(g)
-        self.graph._clear_buffer()
+        if self.graph_plot:
+            for g in self.graph_plot:
+                self.graph.remove_plot(g)
+            self.graph._clear_buffer()
+            
         self.graph_plot = []
         ymax = []
 
@@ -349,37 +338,37 @@ class Home (BoxLayout):
         self.graph.border_color = (0.3,0.3,0.3,1)
 
         #They must be outside of with canvas:, otherwise double line
-        if self.bk.state == 'down' : 
-            self.plot_bk = MeshLinePlot(color=[0, 1, 0, 1])
+        if self.bkg.active == True : 
+            self.plot_bk = MeshLinePlot(color=[0, 0.4, 0.2, 1])
             self.plot_bk.points = [(x_0, self.areas[x_0,0].numpy()/100) for x_0 in x]
             self.graph_plot.append(self.plot_bk)
             ymax.append(int(np.max(self.areas[:,0])/100 *2))
-        if self.ul.state == 'down': 
+        if self.ulg.active == True: 
             self.plot_ul = MeshLinePlot(color=[0, 0, 1, 1])
             self.plot_ul.points = [(x_1, self.areas[x_1,1].numpy()/100) for x_1 in x]
             self.graph_plot.append(self.plot_ul)
             ymax.append(int(np.max(self.areas[:,1])/100 *2))
-        if self.hp.state == 'down': 
+        if self.hpg.active == True: 
             self.plot_hp = MeshLinePlot(color=[1, 0, 0, 1])
             self.plot_hp.points = [(x_2, self.areas[x_2,2].numpy()/100) for x_2 in x]
             self.graph_plot.append(self.plot_hp)
             ymax.append(int(np.max(self.areas[:,2])/100 *2))
-        if self.sp.state == 'down': 
-            self.plot_sp = MeshLinePlot(color=[1, 1, 0, 1])
+        if self.spg.active == True: 
+            self.plot_sp = MeshLinePlot(color=[0.9, 0.7, 0, 1])
             self.plot_sp.points = [(x_3, self.areas[x_3,3].numpy()/100) for x_3 in x]
             self.graph_plot.append(self.plot_sp)
             ymax.append(int(np.max(self.areas[:,3])/100 *2))
-        if self.to.state == 'down': 
+        if self.tog.active == True: 
             self.plot_to = MeshLinePlot(color=[1, 0.07, 0.7, 1])
             self.plot_to.points = [(x_4, self.areas[x_4,4].numpy()/100) for x_4 in x]
             self.graph_plot.append(self.plot_to)
             ymax.append(int(np.max(self.areas[:,4])/100 *2))
-        if self.ll.state == 'down': 
+        if self.llg.active == True: 
             self.plot_ll = MeshLinePlot(color=[0.6, 0.17, 0.93, 1])
             self.plot_ll.points = [(x_5, self.areas[x_5,5].numpy()/100) for x_5 in x]
             self.graph_plot.append(self.plot_ll)
             ymax.append(int(np.max(self.areas[:,5])/100 *2))
-        if self.he.state == 'down':
+        if self.heg.active == True:
             self.plot_he = LinePlot(color=[0.69, 0.13, 0.13, 1])
             self.plot_he.points = [(x_6, self.areas[x_6,6].numpy()/100) for x_6 in x]
             self.graph_plot.append(self.plot_he)
@@ -427,6 +416,8 @@ class Home (BoxLayout):
                 self.distances.append(Ellipse(size = (self.d,self.d), pos = (self.mri.x0 , self.mri.y0 )))
                 self.mri.x1 = self.mri.x0 
                 self.mri.y1 = self.mri.y0 
+                print('x1', self.mri.x1)
+                print('y1', self.mri.y1)
                 self.mri.state = 1
                 self.check_distances = True
             elif self.mri.state == 1:
@@ -435,6 +426,21 @@ class Home (BoxLayout):
                     self.distances.pop(-1)
                 Color(1,1,1,1)
                 self.distances.append(Line(points = [self.mri.x1, self.mri.y1, self.mri.x0 , self.mri.y0 ], width = 1.5))
+
+                #evaluating distance in 256x256 gridspace
+                p1 = (self.mri.x1,self.mri.y1)
+                p2 = (self.mri.x0,self.mri.y0)
+
+                dx = abs(p1[0]-p2[0])
+                dy = abs(p1[1]-p2[1])
+                dx_256 = (256*dx)/self.mri.size[0]
+                dy_256 = (256*dy)/self.mri.size[1]
+                d_xy_256 = sqrt(pow(dx_256,2)+pow(dy_256,2))[0]
+                # #diag_frame = sqrt(pow(self.size[0],2)+pow(self.size[1],2))
+                # d_ab_norm = round(np.max(((256*d_ab)/diag_frame)[0]),1)
+                d_xy_mm = round(np.max(d_xy_256*(1.6)),1)
+                self.distances.append(Label(text = '{}mm'.format(d_xy_mm), size = (16,24), pos = (self.mri.x0,self.mri.y0), valign = 'bottom', halign = 'left'))
+
                 self.mri.state = 0
                 self.check_distances = True
     
@@ -453,7 +459,7 @@ class Home (BoxLayout):
 class VTS_ToolApp(App):
     def build(self):
         home = Home()
-        Clock.schedule_interval(home.update, UPDATING_FREQ)
+        Clock.schedule_interval(home.update, Global().update_freq)
         return home
 
 if __name__ == '__main__':
