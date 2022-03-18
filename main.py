@@ -34,12 +34,14 @@ from kivy.config import Config
 from utils import prediction
 
 import os
-class Global():
-    update_freq = 0.01
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #decommentare per escludere la GPU
 print(device_lib.list_local_devices())
 
+DEF_UPDATE_FREQ = 0.01
+PRED_FREQ = 1
+FRAME_TO_EXTRACT = 354
+VIDEO_FREQ = 1/25 #frames
 
 class ThreadWithReturnValue(Thread):
     def __init__(self, group=None, target=None, name=None,
@@ -86,12 +88,17 @@ class Home (BoxLayout):
     model_path = os.path.join(dir_path, 'Models')
 
     def __init__(self, **kwargs):
-        self.loading_bar = 0
+        #init loading bar
+        self.loading_bar = 0 
         self.load = 0
+        #init 
         self.thread_pred_start = 0
+        #init canvas mri
         self.loading_fig = []
-        Global()
+        #init play button
+        self.counter = 0
         super().__init__(**kwargs)
+        self.clock = Clock.schedule_interval(self.update, DEF_UPDATE_FREQ)
 
     def update(self, *args):
         if self.sbj.press_v == True:
@@ -103,7 +110,6 @@ class Home (BoxLayout):
                                             filetypes= (("avi files", "*.avi"), ("all files", "*.*"))) #find only .avi files
             Window.raise_window()
 
-            print(self.fpath)
             if self.fpath == '':
                 self.sbj.text = 'Select Video'
             else:
@@ -135,19 +141,11 @@ class Home (BoxLayout):
                 el.size = self.mri.size
             
             if self.check_distances == True:
-                print(self.initial_dim)
-                print(self.size)
-                print(self.size[0])
-                print(self.initial_dim[0])
                 stretch = (self.size[0]/self.initial_dim[0], self.size[1]/self.initial_dim[1])
-                print(self.initial_pos)
-                print(self.mri.pos)
-
                 ds = self.distances
                 for i in range(0, len(self.distances), 3):
                     #Ellipses
                     ds[i].pos = (ds[i].pos[0]*stretch[0], ds[i].pos[1]*stretch[1])
-                    print(ds[i].pos)
 
                     #Lines
                     ds[i+1].points = (ds[i+1].points[0]*stretch[0], ds[i+1].points[1]*stretch[1], ds[i+1].points[2]*stretch[0], ds[i+1].points[3]*stretch[1])
@@ -159,20 +157,35 @@ class Home (BoxLayout):
             self.initial_dim = self.size.copy()
         
         if self.play.state == 'down':
-            self.counter = self.counter + 1
-            if self.counter == self.max_count:
+            # self.counter = self.counter + 1
+            # if self.counter == self.max_count:
+            #     if self.slider.value == self.play.frames:
+            #         self.slider.value = 0
+            #         self.play.state = 'normal'
+            #     else:
+            #         self.slider.value = self.slider.value + 1
+            #     self.counter = 0
+            if self.counter == 0:
+                self.clock.cancel()
+                self.clock = Clock.schedule_interval(self.update, VIDEO_FREQ)
+                self.counter = 1
+            else:
                 if self.slider.value == self.play.frames:
                     self.slider.value = 0
+                    self.counter = 0
                     self.play.state = 'normal'
+                    self.clock.cancel()
+                    self.clock = Clock.schedule_interval(self.update, DEF_UPDATE_FREQ)
                 else:
                     self.slider.value = self.slider.value + 1
-                self.counter = 0
+
 
         if self.thread_pred_start == 1:
-            # if self.thread_pred.run() == None:
+            
+            #loading bar update
             self.loading_bar = self.loading_bar + 1
             if self.loading_bar == 1:
-                self.load = self.load+1
+                self.load = self.load+90
                 with self.textbar.canvas:
                     self.textbar.canvas.clear()
                     Color(0.12,0.18,0.20,1)
@@ -199,14 +212,12 @@ class Home (BoxLayout):
                 with self.textbar.canvas:
                     self.textbar.canvas.clear()
                 self.plot_mri, self.image, self.predictions, self.areas = self.thread_pred.join()
-                Global().update_freq = 0.01
+                self.clock.cancel()
+                self.clock = Clock.schedule_interval(self.update, DEF_UPDATE_FREQ) 
                 self.msg.text = self.sbj.text + ' Segmentation'
 
                 self.tot_frames = self.areas[:,0].shape[0] #extract frames from areas
                 self.play.frames = self.tot_frames-1
-                
-                print(self.predictions.shape)
-                print(self.areas.shape)
 
                 self.slider.disabled = False
                 self.toggle.disabled = False
@@ -222,9 +233,7 @@ class Home (BoxLayout):
                 self.check_distances = False
                 self.graph_plot = [None]
 
-                self.counter = 0
-                needed_freq = 1/25 #frames
-                self.max_count = (needed_freq/Global().update_freq)
+                self.max_count = (VIDEO_FREQ/DEF_UPDATE_FREQ)
                 texture = Texture.create(size=(256, 256), colorfmt='rgb')
                 texture.blit_buffer(self.plot_mri[0].flatten(), colorfmt='rgb', bufferfmt='ubyte')
                 with self.mri.canvas.before:
@@ -254,18 +263,17 @@ class Home (BoxLayout):
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
 
 
-        images_to_keep = 3  #all is 354
+        images_to_keep = FRAME_TO_EXTRACT  #all is 354
         self.slider.max = images_to_keep-1
         self.slider.min = 0
-        Global().update_freq = 5
+        self.clock.cancel()
+        self.clock = Clock.schedule_interval(self.update, PRED_FREQ)
         self.thread_pred = ThreadWithReturnValue(target=prediction, args=(self.fpath, images_to_keep, model_path, self.pred_model), kwargs={})
         self.thread_pred.daemon = True
         self.thread_pred.start()
         self.thread_pred_start = 1
 
     def Plotter(self, clear, *args):
-
-        print(self.play.size_hint)
 
         frame = int(self.slider.value)
 
@@ -295,45 +303,6 @@ class Home (BoxLayout):
         ymax = []
 
         x = np.arange(frame+1)
-
-        with self.mri.canvas.before:
-            if clear == True:
-                self.mri.canvas.after.clear()
-                self.mri.canvas.before.clear()
-                self.image_set = []
-                self.distances = []
-
-            Color(1, 1, 1, 1)  
-            self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
-            if self.bk.state == 'down' : 
-                Color(0, 1, 0, 0.3)
-                #Color(0.5, 1, 1, 0.3)
-                self.image_set.append(Rectangle(texture=textureBK, pos=self.mri.pos, size=self.mri.size,))
-            if self.ul.state == 'down': 
-                Color(0, 0, 1, 0.3)
-                #Color(1, 0.5, 1, 0.3)
-                self.image_set.append(Rectangle(texture=textureUL, pos=self.mri.pos, size=self.mri.size,))
-            if self.hp.state == 'down': 
-                Color(1, 0, 0, 0.3)
-                #Color(1, 1, 0.5, 0.3)
-                self.image_set.append(Rectangle(texture=textureHP, pos=self.mri.pos, size=self.mri.size,))
-            if self.sp.state == 'down': 
-                Color(1, 1, 0, 0.3)
-                #Color(0.5, 1, 0.5, 0.3)
-                self.image_set.append(Rectangle(texture=textureSP, pos=self.mri.pos, size=self.mri.size,))
-            if self.to.state == 'down': 
-                Color(1, 0.07, 0.7, 0.3)
-                #Color(0.5, 0.5, 1, 0.3)
-                self.image_set.append(Rectangle(texture=textureTO, pos=self.mri.pos, size=self.mri.size,))
-            if self.ll.state == 'down': 
-                Color(0.6, 0.17, 0.93, 0.3)
-                #Color(1, 0.5, 0.5, 0.3)
-                self.image_set.append(Rectangle(texture=textureLL, pos=self.mri.pos, size=self.mri.size,))
-            if self.he.state == 'down': 
-                Color(0.69, 0.13, 0.13, 0.3)
-                #Color(0.7, 1, 0.7, 0.3)
-                self.image_set.append(Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,))
-
 
         self.graph.border_color = (0.3,0.3,0.3,1)
 
@@ -398,26 +367,55 @@ class Home (BoxLayout):
         for g in self.graph_plot:
             self.graph.add_plot(g)
 
-        #print(self.boxdim.size)
+
+        with self.mri.canvas.before:
+            if clear == True:
+                self.mri.canvas.after.clear()
+                self.mri.canvas.before.clear()
+                self.image_set = []
+                self.distances = []
+
+            Color(1, 1, 1, 1)  
+            self.image_set.append(Rectangle(texture=texture, pos=self.mri.pos, size=self.mri.size,))
+            if self.bk.state == 'down' : 
+                Color(0, 1, 0, 0.3)
+                #Color(0.5, 1, 1, 0.3)
+                self.image_set.append(Rectangle(texture=textureBK, pos=self.mri.pos, size=self.mri.size,))
+            if self.ul.state == 'down': 
+                Color(0, 0, 1, 0.3)
+                #Color(1, 0.5, 1, 0.3)
+                self.image_set.append(Rectangle(texture=textureUL, pos=self.mri.pos, size=self.mri.size,))
+            if self.hp.state == 'down': 
+                Color(1, 0, 0, 0.3)
+                #Color(1, 1, 0.5, 0.3)
+                self.image_set.append(Rectangle(texture=textureHP, pos=self.mri.pos, size=self.mri.size,))
+            if self.sp.state == 'down': 
+                Color(1, 1, 0, 0.3)
+                #Color(0.5, 1, 0.5, 0.3)
+                self.image_set.append(Rectangle(texture=textureSP, pos=self.mri.pos, size=self.mri.size,))
+            if self.to.state == 'down': 
+                Color(1, 0.07, 0.7, 0.3)
+                #Color(0.5, 0.5, 1, 0.3)
+                self.image_set.append(Rectangle(texture=textureTO, pos=self.mri.pos, size=self.mri.size,))
+            if self.ll.state == 'down': 
+                Color(0.6, 0.17, 0.93, 0.3)
+                #Color(1, 0.5, 0.5, 0.3)
+                self.image_set.append(Rectangle(texture=textureLL, pos=self.mri.pos, size=self.mri.size,))
+            if self.he.state == 'down': 
+                Color(0.69, 0.13, 0.13, 0.3)
+                #Color(0.7, 1, 0.7, 0.3)
+                self.image_set.append(Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,))
 
     def Draw(self, set = 1, *args):
-        print('-------------')
-        print(self.mri.x0)
-        print(self.mri.y0)
-        print(self.mri.check)
-        print('-------------')
         with self.mri.canvas.after:
             self.d = 2
             if self.mri.state == 0:
                 self.initial_dim = self.size.copy()
                 self.initial_pos = self.mri.pos.copy()
-                print('a', self.initial_dim)
                 Color(1,1,1,1)
                 self.distances.append(Ellipse(size = (self.d,self.d), pos = (self.mri.x0 , self.mri.y0 )))
                 self.mri.x1 = self.mri.x0 
                 self.mri.y1 = self.mri.y0 
-                print('x1', self.mri.x1)
-                print('y1', self.mri.y1)
                 self.mri.state = 1
                 self.check_distances = True
             elif self.mri.state == 1:
@@ -453,13 +451,11 @@ class Home (BoxLayout):
              self.slider.value = 0
         else:
             self.slider.value = self.slider.value + 1
-            print(self.slider.value)
-            time.sleep(1)
 
 class VTS_ToolApp(App):
     def build(self):
         home = Home()
-        Clock.schedule_interval(home.update, Global().update_freq)
+        #TimeSchedule().start(DEF_UPDATE_FREQ)
         return home
 
 if __name__ == '__main__':
