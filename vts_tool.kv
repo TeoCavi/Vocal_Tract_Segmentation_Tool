@@ -1,3 +1,53 @@
+#:import Factory kivy.factory.Factory
+
+<RSpinner@Spinner>
+    background_normal: ''
+    background_color: (0,0,0,0)
+    canvas.before:
+        Color:
+            rgba: (0.12,0.18,0.20,1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [self.height/2]
+
+    option_cls: Factory.CustomSpinnerOptions
+
+<CustomSpinnerOptions@SpinnerOption>:
+    background_normal: ''
+    background_color: (0.12,0.18,0.20,1)      # blue
+
+    #on_release: 
+        #self.background_color=1, 1, 0, 1    # yellow
+
+
+<RButton@Button>
+    background_normal: ''
+    background_color: (0,0,0,0)
+    canvas.before:
+        Color:
+            rgba: 0.12,0.18,0.20,1
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [self.height/2]
+
+<RToggleButton@ToggleButton>
+    background_down: ''
+    background_normal: ''
+    background_color: (0,0,0,0)
+    canvas.before:
+        Color:
+            rgba: (0.12,0.18,0.20,1) if self.state == 'normal' else self.bkcolor
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [self.height/2]
+
+
+
+
+
 <Home>:
     canvas.before:
         Color:
@@ -51,32 +101,52 @@
                 orientation:"vertical"
                 BoxLayout:
                     orientation:"horizontal"
+                    canvas.before:
+                        Color:
+                            rgba: (0.87, 0.91, 0.92, 1)
+                        RoundedRectangle:
+                            size: (self.size[0]/2, self.size[1])
+                            pos: self.pos
+                            radius: [self.height/2]
                     Label:
                         size_hint: (0.35, 1)
                         text: "Video:"
+                        color: (0.12,0.18,0.20,1)
                         font_size:25          
-                    Button:    
+                    RButton:    
                         id: _sbj
                         size_hint: (0.65, 1)
                         text: 'Select Video'
+                        color: (0.87, 0.91, 0.92, 1) 
                         font_size:20 
                         text_size: self.size
                         halign: "center"
                         valign: "center"
                         press_v: False
                         on_press: root.SetupVideo()
-                        background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                        #background_normal: ''
+                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                    
+
                 BoxLayout:
                     orientation:"horizontal"
+                    canvas.before:
+                        Color:
+                            rgba: (0.87, 0.91, 0.92, 1)
+                        RoundedRectangle:
+                            size: (self.size[0]/2, self.size[1])
+                            pos: self.pos
+                            radius: [self.height/2]
                     Label:
                         size_hint: (0.35, 1)
                         text: "Model:"
+                        color: (0.12,0.18,0.20,1)
                         font_size:25 
-                    Spinner:
+                    RSpinner:
                         id: _model
                         size_hint: (0.65, 1)
                         text: 'Select Model'
+                        color: (0.87, 0.91, 0.92, 1)
                         text_size: self.size
                         font_size:20
                         halign: "center"
@@ -86,10 +156,8 @@
                         press: False
                         on_text: self.click = True
                         on_press: self.press = True
-                        background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
 
-                Button:
+                RButton:
                     id: _pred
                     size_hint: (1, 1)
                     text: "Predict"
@@ -99,11 +167,12 @@
                     valign: "center"
                     disabled: True
                     on_press: root.Prediction()
-                    background_normal: ''
-                    background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
+                    #background_normal: ''
+                    #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1,1,1,1)
 
             BoxLayout:
                 orientation:"horizontal"
+                spacing: 29
                 BoxLayout:
                     size_hint: (0.1, 1)
                 BoxLayout:
@@ -112,89 +181,112 @@
                     spacing: 1
                     orientation:"vertical"
                     disabled: True
+                    canvas.before:
+                        Color:
+                            rgba: (0.87, 0.91, 0.92, 1)
+                        RoundedRectangle:
+                            size: (self.size[0]+14, self.size[1]+14)
+                            pos: (self.pos[0]-7, self.pos[1]-7)
+                            radius: [10]
                     Label:
                         size_hint: (1, 0.04)
                         text: "Labels:"
+                        color: (0.12,0.18,0.20,1)
                         font_size:25
-                    ToggleButton:
+                    RToggleButton:
                         id: _bk
                         size_hint: (1, 0.045)
                         font_size:20
                         text: 'BACKGROUND'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
-                        background_down:''
-                        background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0.4, 0.2, 1)
-                    ToggleButton:
+                        bkcolor: (0, 0.4, 0.2, 1)
+                        #background_down:''
+                        #background_normal: ''
+                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0.4, 0.2, 1)
+                    RToggleButton:
                         id: _ul
                         size_hint: (1, 0.045)
                         font_size:20
                         text: 'UPPER LIP'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
-                        background_normal: ''
-                        background_down:''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0, 1, 1)
-                    ToggleButton:
+                        bkcolor: (0, 0, 1, 1)
+                        #background_normal: ''
+                        #background_down:''
+                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0, 1, 1)
+                    RToggleButton:
                         id: _hp
                         size_hint: (1, 0.045)
                         font_size:20
                         text: 'HARD PALATE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
-                        background_down:''
-                        background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0, 0, 1)
-                    ToggleButton:
+                        bkcolor: (1, 0, 0, 1)
+                        #background_down:''
+                        #background_normal: ''
+                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0, 0, 1)
+                    RToggleButton:
                         id: _sp
                         size_hint: (1, 0.045)
                         font_size:20
                         text: 'SOFT PALATE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
-                        background_down:''
-                        background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.9, 0.7, 0, 1)
-                    ToggleButton:
+                        bkcolor: (0.9, 0.7, 0, 1)
+                        #background_down:''
+                        #background_normal: ''
+                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.9, 0.7, 0, 1)
+                    RToggleButton:
                         id: _to
                         size_hint: (1, 0.045)
                         font_size:20
                         text: 'TONGUE'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
-                        background_down:''
-                        background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0.07, 0.7, 1)
-                    ToggleButton:
+                        bkcolor: (1, 0.07, 0.7, 1)
+                        #background_down:''
+                        #background_normal: ''
+                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0.07, 0.7, 1)
+                    RToggleButton:
                         id: _ll
                         size_hint: (1, 0.045)
                         font_size:20
                         text: 'LOWER LIP'
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
-                        background_down:''
-                        background_normal: ''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.6, 0.17, 0.93, 1)
-                    ToggleButton:
+                        bkcolor: (0.6, 0.17, 0.93, 1)
+                        #background_down:''
+                        #background_normal: ''
+                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.6, 0.17, 0.93, 1)
+                    RToggleButton:
                         id: _he
                         size_hint: (1, 0.045)
                         text: 'HEAD'
                         font_size:20
                         state: 'normal'
                         on_press: root.Plotter(clear = False)
-                        background_down:''
-                        background_normal:''
-                        background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.69, 0.13, 0.13, 1)
+                        bkcolor: (0.69, 0.13, 0.13, 1)
+                        #background_down:''
+                        #background_normal:''
+                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.69, 0.13, 0.13, 1)
                 BoxLayout:
                     size_hint: (0.3, 1)
                     id: _switch
                     spacing: 1
                     orientation:"vertical"
                     disabled: True
+                    canvas.before:
+                        Color:
+                            rgba: (0.87, 0.91, 0.92, 1)
+                        RoundedRectangle:
+                            size: (_switch.size[0]+14, _switch.size[1]+14)
+                            pos: (_switch.pos[0]-7, _switch.pos[1]-7)
+                            radius: [10]
                     Label:
                         size_hint: (1, 0.04)
                         text: "Graph:"
+                        color: (0.12,0.18,0.20,1)
                         font_size:25
                     CheckBox:
                         id: _bkg
@@ -254,6 +346,7 @@
                         size_hint_y: 1
                         xlabel: 'Frames'
                         ylabel: 'Area [log]'
+                        font_size:25
                         label_options: {'color': (0.12,0.18,0.20,1)}
                         ymin:0.09999
                         ymax:10
@@ -268,7 +361,14 @@
                         x_grid: False
                         y_grid: False
                         border_color: 0.12,0.18,0.20,1
-                        background_color: 0.87, 0.91, 0.92, 1 
+                        background_color: (0,0,0,0)
+                        canvas.before:
+                            Color:
+                                rgba: (0.87, 0.91, 0.92, 1)
+                            RoundedRectangle:
+                                size: self.size
+                                pos: self.pos
+                                radius: [10]
 
 
     BoxLayout:                          #data visualization
@@ -279,17 +379,22 @@
         rect_image: self.rect_image
         BoxLayout:
             orientation: "horizontal"
+            spacing: 0
             padding: (0,0)
             size_hint:(1,.075)
             BoxLayout:
                 spacing: 5
                 size_hint:(0.925,1)
                 canvas.before:
-                    Color:  
-                        rgba: 0.87, 0.91, 0.92, 1 
-                    Rectangle:  
-                        pos: self.pos 
+                    Color:
+                        rgba: (0.87, 0.91, 0.92, 1)
+                    Rectangle:
+                        size: (self.size[0]/2, self.size[1])
+                        pos: (self.pos[0] + self.width/2, self.pos[1])
+                    RoundedRectangle:
                         size: self.size
+                        pos: self.pos
+                        radius: [self.height/2]
                 Label:
                     id: _msg
                     text: "Select video and model" 
@@ -304,11 +409,15 @@
                 size_hint:(0.075,1)
                 spacing: 5
                 canvas.before:
-                    Color:  
-                        rgba: 0.87, 0.91, 0.92, 1 
-                    Rectangle:  
-                        pos: self.pos 
+                    Color:
+                        rgba: (0.87, 0.91, 0.92, 1)
+                    Rectangle:
+                        size: (self.size[0]/2, self.size[1])
+                        pos: self.pos
+                    RoundedRectangle:
                         size: self.size
+                        pos: self.pos
+                        radius: [self.height/2]
                     
 
         DrawScreen:
