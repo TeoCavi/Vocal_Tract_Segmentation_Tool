@@ -187,4 +187,37 @@ def prediction(fpath,images_to_keep, model_path, model_name):
 
     predictions, areas = prediction_recomposition(predictions, rgba = [1, 1, 1, 1], out_classes = True)
 
-    return plot_mri, image, predictions, areas
+    # x = np.arange(image.shape[0])
+    # x_0 = np.ones([7,image.shape[0]])
+    # x = x[None,:]*x_0
+    # # x = x.astype(int)
+    # y = np.transpose(areas)
+    # #areas = np.stack((x,y),axis=2)
+    # z = []
+    # z.append(list(map(lambda x,y: (x,y) , x[0,:], y[0,:])))
+    # z.append(list(map(lambda x,y: (x,y) , x[1,:], y[1,:])))
+    # z.append(list(map(lambda x,y: (x,y) , x[2,:], y[2,:])))
+    # z.append(list(map(lambda x,y: (x,y) , x[3,:], y[3,:])))
+    # z.append(list(map(lambda x,y: (x,y) , x[4,:], y[4,:])))
+    # z.append(list(map(lambda x,y: (x,y) , x[5,:], y[5,:])))
+    # areas = z
+
+    x = np.arange(image.shape[0])
+    y0 = [] 
+    y1 = []
+    y2 = []
+    y3 = []
+    y4 = []
+    y5 = []
+    y6 = []
+
+    for x_0 in x:
+        y0.append((x_0, areas[x_0,0].numpy()/100))
+        y1.append((x_0, areas[x_0,1].numpy()/100))
+        y2.append((x_0, areas[x_0,2].numpy()/100))
+        y3.append((x_0, areas[x_0,3].numpy()/100))
+        y4.append((x_0, areas[x_0,4].numpy()/100))
+        y5.append((x_0, areas[x_0,5].numpy()/100))
+        y6.append((x_0, areas[x_0,6].numpy()/100))
+
+    return plot_mri, image, predictions, areas, y0, y1, y2, y3, y4, y5, y6

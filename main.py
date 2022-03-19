@@ -39,8 +39,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #decommentare per escludere la GPU
 print(device_lib.list_local_devices())
 
 DEF_UPDATE_FREQ = 0.01
-PRED_FREQ = 1
-FRAME_TO_EXTRACT = 354
+PRED_FREQ = 0.5
+FRAME_TO_EXTRACT = 35 #max 354
 VIDEO_FREQ = 1/25 #frames
 
 class ThreadWithReturnValue(Thread):
@@ -185,7 +185,7 @@ class Home (BoxLayout):
             #loading bar update
             self.loading_bar = self.loading_bar + 1
             if self.loading_bar == 1:
-                self.load = self.load+90
+                self.load = self.load+45
                 with self.textbar.canvas:
                     self.textbar.canvas.clear()
                     Color(0.12,0.18,0.20,1)
@@ -211,12 +211,15 @@ class Home (BoxLayout):
             if self.thread_pred.is_alive() == False:
                 with self.textbar.canvas:
                     self.textbar.canvas.clear()
-                self.plot_mri, self.image, self.predictions, self.areas = self.thread_pred.join()
+                self.plot_mri, self.image, self.predictions, self.areas, self.y0, self.y1, self.y2, self.y3, self.y4, self.y5, self.y6 = self.thread_pred.join()
                 self.clock.cancel()
                 self.clock = Clock.schedule_interval(self.update, DEF_UPDATE_FREQ) 
                 self.msg.text = self.sbj.text + ' Segmentation'
+                # print(self.areas[0][:1])
+                # self.areas_asarray= np.asarray(self.areas)
 
-                self.tot_frames = self.areas[:,0].shape[0] #extract frames from areas
+                # self.tot_frames = self.areas_asarray.shape[1] #extract frames from areas
+                self.tot_frames = self.areas[:,0].shape[0]
                 self.play.frames = self.tot_frames-1
 
                 self.slider.disabled = False
@@ -274,7 +277,6 @@ class Home (BoxLayout):
         self.thread_pred_start = 1
 
     def Plotter(self, clear, *args):
-
         frame = int(self.slider.value)
 
         texture = Texture.create(size=(256, 256), colorfmt='rgb')
@@ -293,80 +295,6 @@ class Home (BoxLayout):
         textureLL.blit_buffer(self.predictions[frame,:,:,5,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
         textureHE = Texture.create(size=(256, 256), colorfmt='rgba')
         textureHE.blit_buffer(self.predictions[frame,:,:,6,:].flatten(), colorfmt='rgba', bufferfmt='ubyte')
-
-        if self.graph_plot:
-            for g in self.graph_plot:
-                self.graph.remove_plot(g)
-            self.graph._clear_buffer()
-            
-        self.graph_plot = []
-        ymax = []
-
-        x = np.arange(frame+1)
-
-        self.graph.border_color = (0.3,0.3,0.3,1)
-
-        #They must be outside of with canvas:, otherwise double line
-        if self.bkg.active == True : 
-            self.plot_bk = MeshLinePlot(color=[0, 0.4, 0.2, 1])
-            self.plot_bk.points = [(x_0, self.areas[x_0,0].numpy()/100) for x_0 in x]
-            self.graph_plot.append(self.plot_bk)
-            ymax.append(int(np.max(self.areas[:,0])/100 *2))
-        if self.ulg.active == True: 
-            self.plot_ul = MeshLinePlot(color=[0, 0, 1, 1])
-            self.plot_ul.points = [(x_1, self.areas[x_1,1].numpy()/100) for x_1 in x]
-            self.graph_plot.append(self.plot_ul)
-            ymax.append(int(np.max(self.areas[:,1])/100 *2))
-        if self.hpg.active == True: 
-            self.plot_hp = MeshLinePlot(color=[1, 0, 0, 1])
-            self.plot_hp.points = [(x_2, self.areas[x_2,2].numpy()/100) for x_2 in x]
-            self.graph_plot.append(self.plot_hp)
-            ymax.append(int(np.max(self.areas[:,2])/100 *2))
-        if self.spg.active == True: 
-            self.plot_sp = MeshLinePlot(color=[0.9, 0.7, 0, 1])
-            self.plot_sp.points = [(x_3, self.areas[x_3,3].numpy()/100) for x_3 in x]
-            self.graph_plot.append(self.plot_sp)
-            ymax.append(int(np.max(self.areas[:,3])/100 *2))
-        if self.tog.active == True: 
-            self.plot_to = MeshLinePlot(color=[1, 0.07, 0.7, 1])
-            self.plot_to.points = [(x_4, self.areas[x_4,4].numpy()/100) for x_4 in x]
-            self.graph_plot.append(self.plot_to)
-            ymax.append(int(np.max(self.areas[:,4])/100 *2))
-        if self.llg.active == True: 
-            self.plot_ll = MeshLinePlot(color=[0.6, 0.17, 0.93, 1])
-            self.plot_ll.points = [(x_5, self.areas[x_5,5].numpy()/100) for x_5 in x]
-            self.graph_plot.append(self.plot_ll)
-            ymax.append(int(np.max(self.areas[:,5])/100 *2))
-        if self.heg.active == True:
-            self.plot_he = LinePlot(color=[0.69, 0.13, 0.13, 1])
-            self.plot_he.points = [(x_6, self.areas[x_6,6].numpy()/100) for x_6 in x]
-            self.graph_plot.append(self.plot_he)
-            ymax.append(int(np.max(self.areas[:,6])/100 *2))
-
-        
-        if ymax:
-            ass_ymax = np.max(np.asarray(ymax))
-            self.graph.ymax = float(ass_ymax)
-            #self.graph.y_ticks_major = float(ass_ymax/10)
-        else:
-            self.graph.ymax = 10.0
-
-        if  self.areas[:frame,0].shape != 0:
-            self.graph.xmax = float(self.areas[:frame,0].shape[0])
-            if frame == 0:
-                self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])/1
-            elif frame > 0 and frame < 20:
-                self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])/frame
-            elif frame >= 10:
-                self.graph.x_ticks_major = 20
-        else:
-            self.graph.x_ticks_major = 1
-            self.graph.xmax = 1.0
-
-
-        for g in self.graph_plot:
-            self.graph.add_plot(g)
-
 
         with self.mri.canvas.before:
             if clear == True:
@@ -405,6 +333,92 @@ class Home (BoxLayout):
                 Color(0.69, 0.13, 0.13, 0.3)
                 #Color(0.7, 1, 0.7, 0.3)
                 self.image_set.append(Rectangle(texture=textureHE, pos=self.mri.pos, size=self.mri.size,))
+
+        if self.graph_plot:
+            for g in self.graph_plot:
+                self.graph.remove_plot(g)
+            #self.graph._clear_buffer()
+            
+        self.graph_plot = []
+        ymax = []
+
+        x = np.arange(frame+1)
+
+
+        self.graph.border_color = (0.12,0.18,0.20,1)
+
+        #They must be outside of with canvas:, otherwise double line
+        if self.bkg.active == True : 
+            self.plot_bk = MeshLinePlot(color=[0, 0.4, 0.2, 1])
+            self.plot_bk.points = self.y0[:frame+1] #[(x_0, self.areas[x_0,0].numpy()/100) for x_0 in x]
+            self.graph_plot.append(self.plot_bk)
+            # ymax.append(int(np.max(self.areas_asarray[0,:,1])/100 *2))
+            ymax.append(int(np.max(self.areas[:,0])/100 *2))
+        if self.ulg.active == True: 
+            self.plot_ul = MeshLinePlot(color=[0, 0, 1, 1])
+            self.plot_ul.points = self.y1[:frame+1] #[(x_1, self.areas[x_1,1].numpy()/100) for x_1 in x]
+            self.graph_plot.append(self.plot_ul)
+            ymax.append(int(np.max(self.areas[:,1])/100 *2))
+        if self.hpg.active == True: 
+            self.plot_hp = MeshLinePlot(color=[1, 0, 0, 1])
+            self.plot_hp.points = self.y2[:frame+1] #[(x_2, self.areas[x_2,2].numpy()/100) for x_2 in x]
+            self.graph_plot.append(self.plot_hp)
+            ymax.append(int(np.max(self.areas[:,2])/100 *2))
+        if self.spg.active == True: 
+            self.plot_sp = MeshLinePlot(color=[0.9, 0.7, 0, 1])
+            self.plot_sp.points = self.y3[:frame+1] #[(x_3, self.areas[x_3,3].numpy()/100) for x_3 in x]
+            self.graph_plot.append(self.plot_sp)
+            ymax.append(int(np.max(self.areas[:,3])/100 *2))
+        if self.tog.active == True: 
+            self.plot_to = MeshLinePlot(color=[1, 0.07, 0.7, 1])
+            self.plot_to.points = self.y4[:frame+1] #[(x_4, self.areas[x_4,4].numpy()/100) for x_4 in x]
+            self.graph_plot.append(self.plot_to)
+            ymax.append(int(np.max(self.areas[:,4])/100 *2))
+        if self.llg.active == True: 
+            self.plot_ll = MeshLinePlot(color=[0.6, 0.17, 0.93, 1])
+            self.plot_ll.points = self.y5[:frame+1] #[(x_5, self.areas[x_5,5].numpy()/100) for x_5 in x]
+            self.graph_plot.append(self.plot_ll)
+            ymax.append(int(np.max(self.areas[:,5])/100 *2))
+        if self.heg.active == True:
+            self.plot_he = LinePlot(color=[0.69, 0.13, 0.13, 1])
+            self.plot_he.points = self.y6[:frame+1] #[(x_6, self.areas[x_6,6].numpy()/100) for x_6 in x]
+            self.graph_plot.append(self.plot_he)
+            ymax.append(int(np.max(self.areas[:,6])/100 *2))
+
+        
+        if ymax:
+            ass_ymax = np.max(np.asarray(ymax))
+            self.graph.ymax = float(ass_ymax)
+            #self.graph.y_ticks_major = float(ass_ymax/10)
+        else:
+            self.graph.ymax = 10.0
+
+        # if  self.areas_asarray[0,:frame,0].shape[0] != 0:
+        #     self.graph.xmax = float(self.areas_asarray[0,:frame,0].shape[0])
+        #     if frame == 0:
+        #         self.graph.x_ticks_major = float(self.areas_asarray[0,:frame,0].shape[0])/1
+        #     elif frame > 0 and frame < 20:
+        #         self.graph.x_ticks_major = float(self.areas_asarray[0,:frame,0].shape[0])/frame
+        #     elif frame >= 10:
+        #         self.graph.x_ticks_major = 20
+        # else:
+        #     self.graph.x_ticks_major = 1
+        #     self.graph.xmax = 1.0
+
+        if  self.areas[:frame,0].shape != 0:
+            self.graph.xmax = float(self.areas[:frame,0].shape[0])
+            if frame == 0:
+                self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])/1
+            elif frame > 0 and frame < 20:
+                self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])/frame
+            elif frame >= 10:
+                self.graph.x_ticks_major = 20
+        else:
+            self.graph.x_ticks_major = 1
+            self.graph.xmax = 1.0
+
+        for g in self.graph_plot:
+            self.graph.add_plot(g)
 
     def Draw(self, set = 1, *args):
         with self.mri.canvas.after:
