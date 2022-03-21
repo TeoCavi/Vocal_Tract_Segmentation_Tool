@@ -212,7 +212,7 @@ def prediction(fpath,images_to_keep, model_path, model_name):
     y6 = []
 
     for x_0 in x:
-        y0.append((x_0, areas[x_0,0].numpy()/100))
+        y0.append((x_0, areas[x_0,0].numpy()/100)) #/100 is necessary for graph buffer
         y1.append((x_0, areas[x_0,1].numpy()/100))
         y2.append((x_0, areas[x_0,2].numpy()/100))
         y3.append((x_0, areas[x_0,3].numpy()/100))

@@ -33,6 +33,7 @@
             radius: [self.height/2]
 
 <RToggleButton@ToggleButton>
+    color: (0.87, 0.91, 0.92, 1)  
     background_down: ''
     background_normal: ''
     background_color: (0,0,0,0)
@@ -44,6 +45,20 @@
             pos: self.pos
             radius: [self.height/2]
 
+<MToggleButton@ToggleButton>
+    background_down: ''
+    background_normal: ''
+    background_color: (0,0,0,0)
+    text: 'OFF' if self.state == 'normal' else 'ON'
+    color: (0.87, 0.91, 0.92, 1)
+    font_size: 20
+    canvas.before:
+        Color:
+            rgba: (0.12,0.18,0.20,1) if self.state == 'normal' else self.bkcolor
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [self.height/2]
 
 
 
@@ -156,7 +171,6 @@
                         press: False
                         on_text: self.click = True
                         on_press: self.press = True
-
                 RButton:
                     id: _pred
                     size_hint: (1, 1)
@@ -177,159 +191,176 @@
                     size_hint: (0.1, 1)
                 BoxLayout:
                     size_hint: (0.5, 1)
-                    id: _toggle
-                    spacing: 1
+                    id: _boxtog
+                    padding: (0,10,0,0)
+                    spacing: 15
                     orientation:"vertical"
-                    disabled: True
                     canvas.before:
                         Color:
                             rgba: (0.87, 0.91, 0.92, 1)
                         RoundedRectangle:
-                            size: (self.size[0]+14, self.size[1]+14)
-                            pos: (self.pos[0]-7, self.pos[1]-7)
+                            size: (_boxtog.size[0]+14, _boxtog.size[1]+14)
+                            pos: (_boxtog.pos[0]-7, _boxtog.pos[1]-7)
                             radius: [10]
-                    Label:
+                    BoxLayout:
                         size_hint: (1, 0.04)
-                        text: "Labels:"
-                        color: (0.12,0.18,0.20,1)
-                        font_size:25
-                    RToggleButton:
-                        id: _bk
-                        size_hint: (1, 0.045)
-                        font_size:20
-                        text: 'BACKGROUND'
-                        state: 'normal'
-                        on_press: root.Plotter(clear = False)
-                        bkcolor: (0, 0.4, 0.2, 1)
-                        #background_down:''
-                        #background_normal: ''
-                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0.4, 0.2, 1)
-                    RToggleButton:
-                        id: _ul
-                        size_hint: (1, 0.045)
-                        font_size:20
-                        text: 'UPPER LIP'
-                        state: 'normal'
-                        on_press: root.Plotter(clear = False)
-                        bkcolor: (0, 0, 1, 1)
-                        #background_normal: ''
-                        #background_down:''
-                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0, 1, 1)
-                    RToggleButton:
-                        id: _hp
-                        size_hint: (1, 0.045)
-                        font_size:20
-                        text: 'HARD PALATE'
-                        state: 'normal'
-                        on_press: root.Plotter(clear = False)
-                        bkcolor: (1, 0, 0, 1)
-                        #background_down:''
-                        #background_normal: ''
-                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0, 0, 1)
-                    RToggleButton:
-                        id: _sp
-                        size_hint: (1, 0.045)
-                        font_size:20
-                        text: 'SOFT PALATE'
-                        state: 'normal'
-                        on_press: root.Plotter(clear = False)
-                        bkcolor: (0.9, 0.7, 0, 1)
-                        #background_down:''
-                        #background_normal: ''
-                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.9, 0.7, 0, 1)
-                    RToggleButton:
-                        id: _to
-                        size_hint: (1, 0.045)
-                        font_size:20
-                        text: 'TONGUE'
-                        state: 'normal'
-                        on_press: root.Plotter(clear = False)
-                        bkcolor: (1, 0.07, 0.7, 1)
-                        #background_down:''
-                        #background_normal: ''
-                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0.07, 0.7, 1)
-                    RToggleButton:
-                        id: _ll
-                        size_hint: (1, 0.045)
-                        font_size:20
-                        text: 'LOWER LIP'
-                        state: 'normal'
-                        on_press: root.Plotter(clear = False)
-                        bkcolor: (0.6, 0.17, 0.93, 1)
-                        #background_down:''
-                        #background_normal: ''
-                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.6, 0.17, 0.93, 1)
-                    RToggleButton:
-                        id: _he
-                        size_hint: (1, 0.045)
-                        text: 'HEAD'
-                        font_size:20
-                        state: 'normal'
-                        on_press: root.Plotter(clear = False)
-                        bkcolor: (0.69, 0.13, 0.13, 1)
-                        #background_down:''
-                        #background_normal:''
-                        #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.69, 0.13, 0.13, 1)
+                        orientation:"vertical"
+                        Label:
+                            text: "Labels:"
+                            color: (0.12,0.18,0.20,1)
+                            font_size:25
+                    BoxLayout:
+                        size_hint: (1, 0.96)
+                        spacing: 1
+                        id: _toggle
+                        disabled: True
+                        orientation:"vertical"
+                        RToggleButton:
+                            id: _bk
+                            size_hint: (1, 0.045)
+                            font_size:20
+                            text: 'BACKGROUND'
+                            state: 'normal'
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0, 0.4, 0.2, 1)
+                            #background_down:''
+                            #background_normal: ''
+                            #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0.4, 0.2, 1)
+                        RToggleButton:
+                            id: _ul
+                            size_hint: (1, 0.045)
+                            font_size:20
+                            text: 'UPPER LIP'
+                            state: 'normal'
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0, 0, 1, 1)
+                            #background_normal: ''
+                            #background_down:''
+                            #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0, 0, 1, 1)
+                        RToggleButton:
+                            id: _hp
+                            size_hint: (1, 0.045)
+                            font_size:20
+                            text: 'HARD PALATE'
+                            state: 'normal'
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (1, 0, 0, 1)
+                            #background_down:''
+                            #background_normal: ''
+                            #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0, 0, 1)
+                        RToggleButton:
+                            id: _sp
+                            size_hint: (1, 0.045)
+                            font_size:20
+                            text: 'SOFT PALATE'
+                            state: 'normal'
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0.9, 0.7, 0, 1)
+                            #background_down:''
+                            #background_normal: ''
+                            #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.9, 0.7, 0, 1)
+                        RToggleButton:
+                            id: _to
+                            size_hint: (1, 0.045)
+                            font_size:20
+                            text: 'TONGUE'
+                            state: 'normal'
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (1, 0.07, 0.7, 1)
+                            #background_down:''
+                            #background_normal: ''
+                            #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (1, 0.07, 0.7, 1)
+                        RToggleButton:
+                            id: _ll
+                            size_hint: (1, 0.045)
+                            font_size:20
+                            text: 'LOWER LIP'
+                            state: 'normal'
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0.6, 0.17, 0.93, 1)
+                            #background_down:''
+                            #background_normal: ''
+                            #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.6, 0.17, 0.93, 1)
+                        RToggleButton:
+                            id: _he
+                            size_hint: (1, 0.045)
+                            text: 'HEAD'
+                            font_size:20
+                            state: 'normal'
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0.69, 0.13, 0.13, 1)
+                            #background_down:''
+                            #background_normal:''
+                            #background_color: (0.12,0.18,0.20,1) if self.state == 'normal' else (0.69, 0.13, 0.13, 1)
                 BoxLayout:
                     size_hint: (0.3, 1)
-                    id: _switch
-                    spacing: 1
+                    id: _boxgr
+                    padding: (0,10,0,0)
+                    spacing: 15
                     orientation:"vertical"
-                    disabled: True
                     canvas.before:
                         Color:
                             rgba: (0.87, 0.91, 0.92, 1)
                         RoundedRectangle:
-                            size: (_switch.size[0]+14, _switch.size[1]+14)
-                            pos: (_switch.pos[0]-7, _switch.pos[1]-7)
+                            size: (_boxgr.size[0]+14, _boxgr.size[1]+14)
+                            pos: (_boxgr.pos[0]-7, _boxgr.pos[1]-7)
                             radius: [10]
-                    Label:
+                    BoxLayout:
                         size_hint: (1, 0.04)
-                        text: "Graph:"
-                        color: (0.12,0.18,0.20,1)
-                        font_size:25
-                    CheckBox:
-                        id: _bkg
-                        size_hint: (1, 0.045)
-                        active: False
-                        on_active: root.Plotter(clear = False)
-                        color: (0.12,0.18,0.20,1)
-                    CheckBox:
-                        id: _ulg
-                        size_hint: (1, 0.045)
-                        active: False
-                        on_active: root.Plotter(clear = False)
-                        color: (0.12,0.18,0.20,1)
-                    CheckBox:
-                        id: _hpg
-                        size_hint: (1, 0.045)
-                        active: False
-                        on_active: root.Plotter(clear = False)
-                        color: (0.12,0.18,0.20,1)
-                    CheckBox:
-                        id: _spg
-                        size_hint: (1, 0.045)
-                        active: False
-                        on_active: root.Plotter(clear = False)
-                        color: (0.12,0.18,0.20,1)
-                    CheckBox:
-                        id: _tog
-                        size_hint: (1, 0.045)
-                        active: False
-                        on_active: root.Plotter(clear = False)
-                        color: (0.12,0.18,0.20,1)
-                    CheckBox:
-                        id: _llg
-                        size_hint: (1, 0.045)
-                        active: False
-                        on_active: root.Plotter(clear = False)
-                        color: (0.12,0.18,0.20,1)
-                    CheckBox:
-                        id: _heg
-                        size_hint: (1, 0.045)
-                        active: False
-                        on_active: root.Plotter(clear = False)
-                        color: (0.12,0.18,0.20,1)
+                        orientation:"vertical"
+                        Label:
+                            text: "Graph:"
+                            color: (0.12,0.18,0.20,1)
+                            font_size:25
+                    BoxLayout:
+                        size_hint: (1, 0.96)
+                        spacing: 1
+                        id: _switch
+                        disabled: True
+                        orientation:"vertical"
+                        MToggleButton:
+                            id: _bkg
+                            state: 'normal'
+                            size_hint: (1, 0.045)
+                            #active: False
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0, 0.4, 0.2, 1)
+                        MToggleButton:
+                            id: _ulg
+                            state: 'normal'
+                            size_hint: (1, 0.045)
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0, 0, 1, 1)
+                        MToggleButton:
+                            id: _hpg
+                            state: 'normal'
+                            size_hint: (1, 0.045)
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (1, 0, 0, 1)
+                        MToggleButton:
+                            id: _spg
+                            state: 'normal'
+                            size_hint: (1, 0.045)
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0.9, 0.7, 0, 1)
+                        MToggleButton:
+                            id: _tog
+                            state: 'normal'
+                            size_hint: (1, 0.045)
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (1, 0.07, 0.7, 1)
+                        MToggleButton:
+                            id: _llg
+                            state: 'normal'
+                            size_hint: (1, 0.045)
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0.6, 0.17, 0.93, 1)
+                        MToggleButton:
+                            id: _heg
+                            state: 'normal'
+                            size_hint: (1, 0.045)
+                            on_press: root.Plotter(clear = False)
+                            bkcolor: (0.69, 0.13, 0.13, 1)
                 BoxLayout:
                     size_hint: (0.1, 1)
         
@@ -340,7 +371,7 @@
                     scrool_x:True
                     Graph:
                         id: _graph
-                        disabled: True
+                        #disabled: True
                         padding: 5
                         size_hint_x: 1
                         size_hint_y: 1
@@ -465,9 +496,19 @@
                 on_value: root.Plotter(clear = True)
                 background_normal: ''
                 background_color: 0.12,0.18,0.20,1
-            Label:
+            BoxLayout:
                 size_hint:(0.1,1)
-                text: str(int(_slider.value))
+                canvas.before:
+                    Color:
+                        rgba: (0.87, 0.91, 0.92, 1)
+                    RoundedRectangle:
+                        size: self.size
+                        pos: self.pos
+                        radius: [self.height/2]
+                Label:
+                    text: str(int(_slider.value))
+                    color: (0.12,0.18,0.20,1)
+                    font_size: 20
 
         
 

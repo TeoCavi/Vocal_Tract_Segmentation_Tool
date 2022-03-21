@@ -38,9 +38,9 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #decommentare per escludere la GPU
 print(device_lib.list_local_devices())
 
-DEF_UPDATE_FREQ = 0.01
+DEF_UPDATE_FREQ = 0.001
 PRED_FREQ = 0.5
-FRAME_TO_EXTRACT = 354 #max 354
+FRAME_TO_EXTRACT = 6 #max 354
 VIDEO_FREQ = 1/25 #frames
 
 class ThreadWithReturnValue(Thread):
@@ -99,12 +99,14 @@ class Home (BoxLayout):
         self.counter = 0
         #init graph max
         self.ymax = []
+        self.graph_plot = []
         super().__init__(**kwargs)
         self.clock = Clock.schedule_interval(self.update, DEF_UPDATE_FREQ)
 
     def update(self, *args):
         if self.sbj.press_v == True:
             self.sbj.press_v = False
+            self.model.click = False
 
             tkinter.Tk().withdraw()
             self.fpath = filedialog.askopenfilename(initialdir = dir_path,     #salva in filename il nome del video con la sua collocazione
@@ -114,22 +116,35 @@ class Home (BoxLayout):
 
             if self.fpath == '':
                 self.sbj.text = 'Select Video'
+                self.msg.text = 'Select video and model'
             else:
                 name = os.path.splitext(os.path.basename(self.fpath))
                 self.sbj.text = name[0]
                 self.model.disabled = False
                 models = os.listdir(model_path)
                 self.model.values = models
+                self.msg.text = 'Select one Model for prediction'
 
         if self.model.press == True:
-            self.msg.text = 'Select one Model for prediction'
+            self.counter = 0
+            self.ymax = []
+            self.loading_bar = 0 
+            self.load = 0
             self.model.text = ""
             self.model.click = False
             self.mri.canvas.after.clear()
             self.mri.canvas.before.clear()
-            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.graph.disabled = self.play.disabled = self.switch.disabled = True
+            for g in self.graph_plot:
+                self.graph.remove_plot(g)
+            self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.play.disabled = self.switch.disabled = True
             self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+            self.bkg.state = self.ulg.state = self.hpg.state = self.spg.state = self.tog.state = self.llg.state = self.heg.state = 'normal'
+
             self.model.press = False
+            if self.model.text == '':
+                self.model.text = 'Select Model'
+                self.msg.text = 'Select one Model for prediction'
+                self.model.click = False
                   
         if self.model.click == True:
             self.pred.disabled = False
@@ -168,12 +183,13 @@ class Home (BoxLayout):
             #         self.slider.value = self.slider.value + 1
             #     self.counter = 0
             if self.counter == 0:
+                self.slider.value = 0
                 self.clock.cancel()
                 self.clock = Clock.schedule_interval(self.update, VIDEO_FREQ)
                 self.counter = 1
             else:
                 if self.slider.value == self.play.frames:
-                    self.slider.value = 0
+                    #self.slider.value = 0
                     self.counter = 0
                     self.play.state = 'normal'
                     self.clock.cancel()
@@ -190,22 +206,26 @@ class Home (BoxLayout):
                 self.load = self.load+45
                 with self.textbar.canvas:
                     self.textbar.canvas.clear()
+                    r1 = 0.7*self.textbar.height
+                    r2 = 0.9*self.textbar.height
+
                     Color(0.12,0.18,0.20,1)
                     if self.load <= 360:
-                        Ellipse(pos = (self.textbar.pos[0]+(self.textbar.height/2)-40/2, 
-                                        self.textbar.pos[1]+(self.textbar.width/2)-40/2), 
-                                        size= (40,40), angle_start = 0, 
+                        Ellipse(pos = (self.textbar.pos[0]+(self.textbar.width/2)-r2/2, 
+                                        self.textbar.pos[1]+(self.textbar.height/2)-r2/2), 
+                                        size= (r2,r2), angle_start = 0, 
                                         angle_end = self.load)
                     elif self.load > 360 and self.load <= 720:
-                        Ellipse(pos = (self.textbar.pos[0]+(self.textbar.height/2)-40/2, 
-                                        self.textbar.pos[1]+(self.textbar.width/2)-40/2), 
-                                        size= (40,40), angle_start = self.load-360, 
+                        Ellipse(pos = (self.textbar.pos[0]+(self.textbar.width/2)-r2/2, 
+                                        self.textbar.pos[1]+(self.textbar.height/2)-r2/2), 
+                                        size= (r2,r2), angle_start = self.load-360, 
                                         angle_end = 360)
                         if self.load == 720:
                             self.load = 0
-                    Color(0.87, 0.91, 0.92, 1 )
-                    Ellipse(pos = (self.textbar.pos[0]+(self.textbar.height/2)-30/2, self.textbar.pos[1]+(self.textbar.width/2)-30/2),
-                            size = (30,30),
+                    Color(0.87, 0.91, 0.92, 0.7 )
+                    Ellipse(pos = (self.textbar.pos[0]+(self.textbar.width/2)-r1/2, 
+                            self.textbar.pos[1]+(self.textbar.height/2)-r1/2),
+                            size = (r1,r1),
                             angle_start = 0,
                             angle_end = 360,)
                 self.loading_bar = 0
@@ -241,7 +261,7 @@ class Home (BoxLayout):
                 self.switch.disabled = False
                 self.play.disabled = False
                 self.mri.disabled = False
-                self.graph.disabled = False
+                
 
                 self.image_set = []
                 self.distances = []
@@ -264,20 +284,32 @@ class Home (BoxLayout):
     def SetupVideo(self, *args):
         self.mri.canvas.after.clear()
         self.mri.canvas.before.clear()
-        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = self.graph.disabled = self.play.disabled = self.switch.disabled = True
+        self.pred.disabled = self.toggle.disabled = self.slider.disabled = self.mri.disabled = self.model.disabled = self.play.disabled = self.switch.disabled = True
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+        self.bkg.state = self.ulg.state = self.hpg.state = self.spg.state = self.tog.state = self.llg.state = self.heg.state = 'normal'
         self.sbj.press_v = True
+        self.counter = 0
+        self.ymax = []
+        self.loading_bar = 0 
+        self.load = 0
+
+        for g in self.graph_plot:
+            self.graph.remove_plot(g)
         
     def Prediction(self, *args):
-
+        self.counter = 0
+        self.ymax = []
+        self.loading_bar = 0 
+        self.load = 0
         self.slider.value = 0.0
         self.msg.text = 'I am segmenting ' + self.sbj.text + ' video'
         self.msg_loading = self.msg.text
         self.model.click = False
         self.mri.canvas.after.clear()
         self.mri.canvas.before.clear()
-        self.slider.disabled = self.toggle.disabled = self.play.disabled = self.mri.disabled = self.graph.disabled = self.switch.disabled = True
+        self.slider.disabled = self.toggle.disabled = self.play.disabled = self.mri.disabled = self.switch.disabled = True
         self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+        self.bkg.state = self.ulg.state = self.hpg.state = self.spg.state = self.tog.state = self.llg.state = self.heg.state = 'normal'
 
 
         images_to_keep = FRAME_TO_EXTRACT  #all is 354
@@ -355,122 +387,92 @@ class Home (BoxLayout):
         # self.graph_plot = []
 
         self.graph.border_color = (0.12,0.18,0.20,1)
+        self.ymax = []
 
         if self.slider.value == 0:
             for g in self.graph_plot:
                 self.graph.remove_plot(g)
             self.graph_plot = []
-        else:
-            if self.bkg.active == True and self.graph_plot.count(self.plot_bk) == 0 :
+            
+        if self.bkg.state == 'down':
+            if self.graph_plot.count(self.plot_bk) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_bk)
                 self.graph_plot.append(self.plot_bk)
-                self.bk_max = int(np.max(self.areas[:,0])/100 *2)
-                self.ymax.append(self.bk_max)
-            elif self.bkg.active == False and self.graph_plot.count(self.plot_bk) == 1:
+            self.bk_max = int(np.max(self.areas[:,0])/100 *2)
+            self.ymax.append(self.bk_max)
+        elif self.bkg.state == 'normal':
+            if self.graph_plot.count(self.plot_bk) == 1:
                 self.graph.remove_plot(self.plot_bk)
                 self.graph_plot.remove(self.plot_bk)
-                self.ymax.remove(self.bk_max)
 
-            if self.ulg.active == True and self.graph_plot.count(self.plot_ul) == 0 :
+        if self.ulg.state == 'down'  :
+            if self.graph_plot.count(self.plot_ul) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_ul)
                 self.graph_plot.append(self.plot_ul)
-                self.ul_max = int(np.max(self.areas[:,1])/100 *2)
-                self.ymax.append(self.ul_max)
-            elif self.ulg.active == False and self.graph_plot.count(self.plot_ul) == 1:
+            self.ul_max = int(np.max(self.areas[:,1])/100 *2)
+            self.ymax.append(self.ul_max)
+        elif self.ulg.state == 'normal' :
+            if self.graph_plot.count(self.plot_ul) == 1:
                 self.graph.remove_plot(self.plot_ul)
                 self.graph_plot.remove(self.plot_ul)
-                self.ymax.remove(self.ul_max)
 
-            if self.hpg.active == True and self.graph_plot.count(self.plot_hp) == 0 :
+        if self.hpg.state == 'down'  :
+            if self.graph_plot.count(self.plot_hp) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_hp)
                 self.graph_plot.append(self.plot_hp)
-                self.hp_max = int(np.max(self.areas[:,2])/100 *2)
-                self.ymax.append(self.hp_max)
-            elif self.hpg.active == False and self.graph_plot.count(self.plot_hp) == 1:
+            self.hp_max = int(np.max(self.areas[:,2])/100 *2)
+            self.ymax.append(self.hp_max)
+        elif self.hpg.state == 'normal' :
+            if self.graph_plot.count(self.plot_hp) == 1:
                 self.graph.remove_plot(self.plot_hp)
                 self.graph_plot.remove(self.plot_hp)
-                self.ymax.remove(self.hp_max)
 
-            if self.spg.active == True and self.graph_plot.count(self.plot_sp) == 0 :
+        if self.spg.state == 'down':
+            if self.graph_plot.count(self.plot_sp) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_sp)
                 self.graph_plot.append(self.plot_sp)
-                self.sp_max = int(np.max(self.areas[:,3])/100 *2)
-                self.ymax.append(self.sp_max)
-            elif self.spg.active == False and self.graph_plot.count(self.plot_sp) == 1:
+            self.sp_max = int(np.max(self.areas[:,3])/100 *2)
+            self.ymax.append(self.sp_max)
+        elif self.spg.state == 'normal' :
+            if self.graph_plot.count(self.plot_sp) == 1:
                 self.graph.remove_plot(self.plot_sp)
                 self.graph_plot.remove(self.plot_sp)
-                self.ymax.remove(self.sp_max)
-            
-            if self.tog.active == True and self.graph_plot.count(self.plot_to) == 0 :
+        
+        if self.tog.state == 'down':
+            if self.graph_plot.count(self.plot_to) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_to)
                 self.graph_plot.append(self.plot_to)
-                self.to_max = int(np.max(self.areas[:,4])/100 *2)
-                self.ymax.append(self.to_max)
-            elif self.tog.active == False and self.graph_plot.count(self.plot_to) == 1:
+            self.to_max = int(np.max(self.areas[:,4])/100 *2)
+            self.ymax.append(self.to_max)
+        elif self.tog.state == 'normal' :
+            if self.graph_plot.count(self.plot_to) == 1:
                 self.graph.remove_plot(self.plot_to)
                 self.graph_plot.remove(self.plot_to)
-                self.ymax.remove(self.to_max)
-            
-            if self.llg.active == True and self.graph_plot.count(self.plot_ll) == 0 :
+        
+        if self.llg.state == 'down':
+            if self.graph_plot.count(self.plot_ll) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_ll)
                 self.graph_plot.append(self.plot_ll)
-                self.ll_max = int(np.max(self.areas[:,5])/100 *2)
-                self.ymax.append(self.ll_max)
-            elif self.llg.active == False and self.graph_plot.count(self.plot_ll) == 1:
+            self.ll_max = int(np.max(self.areas[:,5])/100 *2)
+            self.ymax.append(self.ll_max)
+        elif self.llg.state == 'normal' :
+            if self.graph_plot.count(self.plot_ll) == 1:
                 self.graph.remove_plot(self.plot_ll)
                 self.graph_plot.remove(self.plot_ll)
-                self.ymax.remove(self.ll_max)
-            
-            if self.heg.active == True and self.graph_plot.count(self.plot_he) == 0 :
+
+        if self.heg.state == 'down':
+            if self.graph_plot.count(self.plot_he) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_he)
                 self.graph_plot.append(self.plot_he)
-                self.he_max = int(np.max(self.areas[:,6])/100 *2)
-                self.ymax.append(self.he_max)
-            elif self.heg.active == False and self.graph_plot.count(self.plot_he) == 1:
+            self.he_max = int(np.max(self.areas[:,6])/100 *2)
+            self.ymax.append(self.he_max)
+        elif self.heg.state == 'normal' :
+            if self.graph_plot.count(self.plot_he) == 1:
                 self.graph.remove_plot(self.plot_he)
                 self.graph_plot.remove(self.plot_he)
-                self.ymax.remove(self.he_max)
 
         self.past_slider_value = self.slider.value
 
-        # #They must be outside of with canvas:, otherwise double line
-        # if self.bkg.active == True : 
-        #     self.plot_bk = MeshLinePlot(color=[0, 0.4, 0.2, 1])
-        #     self.plot_bk.points = self.y0[:frame+1] #[(x_0, self.areas[x_0,0].numpy()/100) for x_0 in x]
-        #     self.graph_plot.append(self.plot_bk)
-        #     ymax.append(int(np.max(self.areas[:,0])/100 *2))
-        # if self.ulg.active == True: 
-        #     self.plot_ul = MeshLinePlot(color=[0, 0, 1, 1])
-        #     self.plot_ul.points = self.y1[:frame+1] #[(x_1, self.areas[x_1,1].numpy()/100) for x_1 in x]
-        #     self.graph_plot.append(self.plot_ul)
-        #     ymax.append(int(np.max(self.areas[:,1])/100 *2))
-        # if self.hpg.active == True: 
-        #     self.plot_hp = MeshLinePlot(color=[1, 0, 0, 1])
-        #     self.plot_hp.points = self.y2[:frame+1] #[(x_2, self.areas[x_2,2].numpy()/100) for x_2 in x]
-        #     self.graph_plot.append(self.plot_hp)
-        #     ymax.append(int(np.max(self.areas[:,2])/100 *2))
-        # if self.spg.active == True: 
-        #     self.plot_sp = MeshLinePlot(color=[0.9, 0.7, 0, 1])
-        #     self.plot_sp.points = self.y3[:frame+1] #[(x_3, self.areas[x_3,3].numpy()/100) for x_3 in x]
-        #     self.graph_plot.append(self.plot_sp)
-        #     ymax.append(int(np.max(self.areas[:,3])/100 *2))
-        # if self.tog.active == True: 
-        #     self.plot_to = MeshLinePlot(color=[1, 0.07, 0.7, 1])
-        #     self.plot_to.points = self.y4[:frame+1] #[(x_4, self.areas[x_4,4].numpy()/100) for x_4 in x]
-        #     self.graph_plot.append(self.plot_to)
-        #     ymax.append(int(np.max(self.areas[:,4])/100 *2))
-        # if self.llg.active == True: 
-        #     self.plot_ll = MeshLinePlot(color=[0.6, 0.17, 0.93, 1])
-        #     self.plot_ll.points = self.y5[:frame+1] #[(x_5, self.areas[x_5,5].numpy()/100) for x_5 in x]
-        #     self.graph_plot.append(self.plot_ll)
-        #     ymax.append(int(np.max(self.areas[:,5])/100 *2))
-        # if self.heg.active == True:
-        #     self.plot_he = LinePlot(color=[0.69, 0.13, 0.13, 1])
-        #     self.plot_he.points = self.y6[:frame+1] #[(x_6, self.areas[x_6,6].numpy()/100) for x_6 in x]
-        #     self.graph_plot.append(self.plot_he)
-        #     ymax.append(int(np.max(self.areas[:,6])/100 *2))
-
-        
         if self.ymax:
             ass_ymax = np.max(np.asarray(self.ymax))
             self.graph.ymax = float(ass_ymax)
