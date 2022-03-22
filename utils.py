@@ -212,12 +212,12 @@ def prediction(fpath,images_to_keep, model_path, model_name):
     y6 = []
 
     for x_0 in x:
-        y0.append((x_0, areas[x_0,0].numpy()/100)) #/100 is necessary for graph buffer
-        y1.append((x_0, areas[x_0,1].numpy()/100))
-        y2.append((x_0, areas[x_0,2].numpy()/100))
-        y3.append((x_0, areas[x_0,3].numpy()/100))
-        y4.append((x_0, areas[x_0,4].numpy()/100))
-        y5.append((x_0, areas[x_0,5].numpy()/100))
-        y6.append((x_0, areas[x_0,6].numpy()/100))
+        y0.append((x_0, areas[x_0,0].numpy())) #/100 is necessary for graph buffer
+        y1.append((x_0, areas[x_0,1].numpy()))
+        y2.append((x_0, areas[x_0,2].numpy()))
+        y3.append((x_0, areas[x_0,3].numpy()))
+        y4.append((x_0, areas[x_0,4].numpy()))
+        y5.append((x_0, areas[x_0,5].numpy()))
+        y6.append((x_0, areas[x_0,6].numpy()))
 
     return plot_mri, image, predictions, areas, y0, y1, y2, y3, y4, y5, y6

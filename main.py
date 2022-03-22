@@ -40,7 +40,7 @@ print(device_lib.list_local_devices())
 
 DEF_UPDATE_FREQ = 0.001
 PRED_FREQ = 0.5
-FRAME_TO_EXTRACT = 6 #max 354
+FRAME_TO_EXTRACT = 354 #max 354
 VIDEO_FREQ = 1/25 #frames
 
 class ThreadWithReturnValue(Thread):
@@ -188,7 +188,7 @@ class Home (BoxLayout):
                 self.clock = Clock.schedule_interval(self.update, VIDEO_FREQ)
                 self.counter = 1
             else:
-                if self.slider.value == self.play.frames:
+                if self.slider.value == self.play.frames-1:
                     #self.slider.value = 0
                     self.counter = 0
                     self.play.state = 'normal'
@@ -398,7 +398,7 @@ class Home (BoxLayout):
             if self.graph_plot.count(self.plot_bk) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_bk)
                 self.graph_plot.append(self.plot_bk)
-            self.bk_max = int(np.max(self.areas[:,0])/100 *2)
+            self.bk_max = int(np.max(self.areas[:,0]) *2)
             self.ymax.append(self.bk_max)
         elif self.bkg.state == 'normal':
             if self.graph_plot.count(self.plot_bk) == 1:
@@ -409,7 +409,7 @@ class Home (BoxLayout):
             if self.graph_plot.count(self.plot_ul) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_ul)
                 self.graph_plot.append(self.plot_ul)
-            self.ul_max = int(np.max(self.areas[:,1])/100 *2)
+            self.ul_max = int(np.max(self.areas[:,1]) *2)
             self.ymax.append(self.ul_max)
         elif self.ulg.state == 'normal' :
             if self.graph_plot.count(self.plot_ul) == 1:
@@ -420,7 +420,7 @@ class Home (BoxLayout):
             if self.graph_plot.count(self.plot_hp) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_hp)
                 self.graph_plot.append(self.plot_hp)
-            self.hp_max = int(np.max(self.areas[:,2])/100 *2)
+            self.hp_max = int(np.max(self.areas[:,2]) *2)
             self.ymax.append(self.hp_max)
         elif self.hpg.state == 'normal' :
             if self.graph_plot.count(self.plot_hp) == 1:
@@ -431,7 +431,7 @@ class Home (BoxLayout):
             if self.graph_plot.count(self.plot_sp) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_sp)
                 self.graph_plot.append(self.plot_sp)
-            self.sp_max = int(np.max(self.areas[:,3])/100 *2)
+            self.sp_max = int(np.max(self.areas[:,3]) *2)
             self.ymax.append(self.sp_max)
         elif self.spg.state == 'normal' :
             if self.graph_plot.count(self.plot_sp) == 1:
@@ -442,7 +442,7 @@ class Home (BoxLayout):
             if self.graph_plot.count(self.plot_to) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_to)
                 self.graph_plot.append(self.plot_to)
-            self.to_max = int(np.max(self.areas[:,4])/100 *2)
+            self.to_max = int(np.max(self.areas[:,4]) *1.01)
             self.ymax.append(self.to_max)
         elif self.tog.state == 'normal' :
             if self.graph_plot.count(self.plot_to) == 1:
@@ -453,7 +453,7 @@ class Home (BoxLayout):
             if self.graph_plot.count(self.plot_ll) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_ll)
                 self.graph_plot.append(self.plot_ll)
-            self.ll_max = int(np.max(self.areas[:,5])/100 *2)
+            self.ll_max = int(np.max(self.areas[:,5]) *1.01)
             self.ymax.append(self.ll_max)
         elif self.llg.state == 'normal' :
             if self.graph_plot.count(self.plot_ll) == 1:
@@ -464,7 +464,7 @@ class Home (BoxLayout):
             if self.graph_plot.count(self.plot_he) == 0 and self.slider.value != 0:
                 self.graph.add_plot(self.plot_he)
                 self.graph_plot.append(self.plot_he)
-            self.he_max = int(np.max(self.areas[:,6])/100 *2)
+            self.he_max = int(np.max(self.areas[:,6]) *2)
             self.ymax.append(self.he_max)
         elif self.heg.state == 'normal' :
             if self.graph_plot.count(self.plot_he) == 1:
@@ -477,16 +477,16 @@ class Home (BoxLayout):
             ass_ymax = np.max(np.asarray(self.ymax))
             self.graph.ymax = float(ass_ymax)
         else:
-            self.graph.ymax = 10.0
+            self.graph.ymax = 500.0
 
         if  self.areas[:frame,0].shape != 0:
             self.graph.xmax = float(self.areas[:frame,0].shape[0])
             if frame == 0:
                 self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])/1
-            elif frame > 0 and frame < 20:
+            elif frame > 0 and frame < 25:
                 self.graph.x_ticks_major = float(self.areas[:frame,0].shape[0])/frame
-            elif frame >= 10:
-                self.graph.x_ticks_major = 20
+            elif frame >= 25:
+                self.graph.x_ticks_major = 25
         else:
             self.graph.x_ticks_major = 1
             self.graph.xmax = 1.0

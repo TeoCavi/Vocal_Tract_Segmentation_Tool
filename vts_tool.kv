@@ -32,6 +32,20 @@
             pos: self.pos
             radius: [self.height/2]
 
+
+
+<GenButton@Button>
+    background_normal: ''
+    background_color: (0,0,0,0)
+    bkcolor: self.bkcolor
+    canvas.before:
+        Color:
+            rgba: self.bkcolor
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [10]
+
 <RToggleButton@ToggleButton>
     color: (0.87, 0.91, 0.92, 1)  
     background_down: ''
@@ -186,9 +200,8 @@
 
             BoxLayout:
                 orientation:"horizontal"
+                padding: (7,0,7,0)
                 spacing: 29
-                BoxLayout:
-                    size_hint: (0.1, 1)
                 BoxLayout:
                     size_hint: (0.5, 1)
                     id: _boxtog
@@ -325,6 +338,14 @@
                             #active: False
                             on_press: root.Plotter(clear = False)
                             bkcolor: (0, 0.4, 0.2, 1)
+                            #blocking canvas
+                            disabled: True
+                            canvas.after:
+                                Color:
+                                    rgba: (0.87, 0.91, 0.92, 1)
+                                Rectangle:
+                                    size: self.size
+                                    pos:self.pos
                         MToggleButton:
                             id: _ulg
                             state: 'normal'
@@ -361,9 +382,64 @@
                             size_hint: (1, 0.045)
                             on_press: root.Plotter(clear = False)
                             bkcolor: (0.69, 0.13, 0.13, 1)
+                            #blocking canvas
+                            disabled: True
+                            canvas.after:
+                                Color:
+                                    rgba: (0.87, 0.91, 0.92, 1)
+                                Rectangle:
+                                    size: self.size
+                                    pos:self.pos
+
+
                 BoxLayout:
-                    size_hint: (0.1, 1)
-        
+                    size_hint: (0.2, 1)
+                    id: _boxsr
+                    orientation: 'vertical'
+                    spacing: 15
+                    padding: (0,10,0,10)
+                    canvas.before:
+                        Color:
+                            rgba: (0.87, 0.91, 0.92, 1)
+                        RoundedRectangle:
+                            size: (_boxsr.size[0]+14, _boxsr.size[1]+14)
+                            pos: (_boxsr.pos[0]-7, _boxsr.pos[1]-7)
+                            radius: [10]
+                    BoxLayout:
+                        size_hint: (1,0.8)
+                        canvas.before:
+                            Color:
+                                rgba: (0.23, 0.70, 0.44, 1)
+                            RoundedRectangle:
+                                size: self.size
+                                pos: self.pos
+                                radius: [10]
+                        Label:
+                            text: "Save" 
+                            color: (0.12,0.18,0.20,1)
+                            text_size: self.width, None
+                            font_size:25
+                            halign: 'center'
+                            valign: 'center'
+
+
+                    BoxLayout:
+                        size_hint: (1,0.8)
+                        canvas.before:
+                            Color:
+                                rgba: (1, 0.38, 0.27, 1)
+                            RoundedRectangle:
+                                size: self.size
+                                pos: self.pos
+                                radius: [10]
+                        Label:
+                            text: "Reset" 
+                            color: (0.12,0.18,0.20,1)
+                            text_size: self.width, None
+                            font_size:25
+                            halign: 'center'
+                            valign: 'center'
+                           
             BoxLayout:
                 size_hint: (1,1.4)
                 ScrollView:
@@ -377,22 +453,25 @@
                         size_hint_y: 1
                         xlabel: 'Frames'
                         ylabel: 'Area [log]'
-                        font_size:25
+                        font_size:16
                         label_options: {'color': (0.12,0.18,0.20,1)}
-                        ymin:0.09999
-                        ymax:10
+                        ymin:0
+                        ymax:500
                         xmin:0
                         xmax:1
-                        ylog: True 
                         x_ticks_major: 1
-                        y_ticks_major: 1
-                        y_ticks_minor: 10
+                        y_ticks_major:100
                         x_grid_label: True
                         y_grid_label: True
                         x_grid: False
                         y_grid: False
                         border_color: 0.12,0.18,0.20,1
                         background_color: (0,0,0,0)
+                        ## Log scale
+                        #ylog: True
+                        #ymin:0.0999
+                        #y_ticks_major: 1
+                        #y_ticks_minor: 10
                         canvas.before:
                             Color:
                                 rgba: (0.87, 0.91, 0.92, 1)
