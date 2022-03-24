@@ -1,7 +1,9 @@
+from fileinput import filename
 from turtle import color, home, pos
 import time
 from cv2 import sqrt
 import tensorflow as tf
+import matplotlib
 import matplotlib.pyplot as plt
 from tensorflow.python.client import device_lib 
 from PIL import Image
@@ -10,8 +12,10 @@ from tkinter import Variable, filedialog
 import kivy
 from threading import Thread
 from multiprocessing import Process
-
+from dateutil.tz import gettz
+from datetime import datetime
 import numpy as np
+import pandas as pd
 # import pyautogui
 kivy.require("2.0.0")
 
@@ -84,8 +88,10 @@ class Home (BoxLayout):
 
     global dir_path
     global model_path
+    global results_path
     dir_path = r"C:\Users\matte\Desktop\VTSTool_DIR"
     model_path = os.path.join(dir_path, 'Models')
+    results_path = os.path.join(dir_path, 'Results')
 
     def __init__(self, **kwargs):
         #init loading bar
@@ -118,8 +124,8 @@ class Home (BoxLayout):
                 self.sbj.text = 'Select Video'
                 self.msg.text = 'Select video and model'
             else:
-                name = os.path.splitext(os.path.basename(self.fpath))
-                self.sbj.text = name[0]
+                self.name = os.path.splitext(os.path.basename(self.fpath))
+                self.sbj.text = self.name[0]
                 self.model.disabled = False
                 models = os.listdir(model_path)
                 self.model.values = models
@@ -188,7 +194,7 @@ class Home (BoxLayout):
                 self.clock = Clock.schedule_interval(self.update, VIDEO_FREQ)
                 self.counter = 1
             else:
-                if self.slider.value == self.play.frames-1:
+                if self.slider.value == self.play.frames:
                     #self.slider.value = 0
                     self.counter = 0
                     self.play.state = 'normal'
@@ -535,10 +541,73 @@ class Home (BoxLayout):
 
     
     def Play(self, *args):
-        if self.slider.value+1 == self.tot_frames:
+        if self.slider.value == self.tot_frames:
              self.slider.value = 0
         else:
             self.slider.value = self.slider.value + 1
+
+    def Reset(self, *args):
+        self.bk.state = self.ul.state = self.hp.state = self.sp.state = self.to.state = self.ll.state = self.he.state = 'normal'
+        self.bkg.state = self.ulg.state = self.hpg.state = self.spg.state = self.tog.state = self.llg.state = self.heg.state = 'normal'
+        self.slider.value = 0
+        self.Plotter(clear = True)
+    
+    def Clear(self, *args):
+        self.mri.canvas.after.clear()
+        self.distances = []
+
+    def Save(self, *args):
+        try:
+            os.mkdir(results_path)
+        except:
+            pass
+        sbjdir = os.path.join(results_path, self.name[0])
+        try:
+            os.mkdir(sbjdir)
+        except:
+            pass
+        filename = 'VTS_of_' + datetime.now(gettz("Europe/Rome")).strftime("%Y%m%d-%H%M%S" )
+        sbjsubdir = os.path.join(sbjdir, filename)
+        try:
+            os.mkdir(sbjsubdir)
+        except:
+            pass
+
+        data = {'BACKGROUND': self.areas[:,0], 
+                'UPPER LIP': self.areas[:,1],
+                'HARD PALATE': self.areas[:,2],
+                'SOFT PALATE': self.areas[:,3],
+                'TONGUE': self.areas[:,4],
+                'LOWER LIP': self.areas[:,5],
+                'HEAD': self.areas[:,6],}
+
+        data_plot = {'LOWER LIP': self.areas[:,5],
+                    'TONGUE': self.areas[:,4],
+                    'UPPER LIP': self.areas[:,1],
+                    'HARD PALATE': self.areas[:,2],
+                    'SOFT PALATE': self.areas[:,3],
+                    }
+
+        df = pd.DataFrame(data=data)
+        df_plot = pd.DataFrame(data=data_plot)
+        df.to_csv(os.path.join(sbjsubdir, filename + '.csv'))
+        #df_plot = df.iloc[:,1:6]
+
+        matplotlib.style.use('bmh')
+        df_plot.plot(fontsize = 15, figsize = [16,9])
+        plt.xlabel('Frames', fontsize = 18)
+        plt.ylabel('Area', fontsize = 18)
+        plt.title('Vocal Tract Segmentation of ' + self.name[0], fontsize = 22, y = 1.05)
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.083), fancybox=True, ncol=5, fontsize = 15)
+        plt.savefig(os.path.join(sbjsubdir, filename + '.pdf'), format = 'pdf',  dpi = 300, pad_inches=0)
+    
+                
+    # with open(os.path.join(NETWORK_DIR, 'overview.csv'), mode = 'w') as output:
+    #     writer = csv.writer(output)
+    #     writer.writerow(header)
+    #     writer.writerows(ordered_rows)
+    #     output.close()
+
 
 class VTS_ToolApp(App):
     def build(self):

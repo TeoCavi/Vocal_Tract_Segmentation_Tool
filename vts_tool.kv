@@ -33,21 +33,9 @@
             radius: [self.height/2]
 
 
-
-<GenButton@Button>
-    background_normal: ''
-    background_color: (0,0,0,0)
-    bkcolor: self.bkcolor
-    canvas.before:
-        Color:
-            rgba: self.bkcolor
-        RoundedRectangle:
-            size: self.size
-            pos: self.pos
-            radius: [10]
-
 <RToggleButton@ToggleButton>
-    color: (0.87, 0.91, 0.92, 1)  
+    color: (0.87, 0.91, 0.92, 1)
+    state: 'normal'  
     background_down: ''
     background_normal: ''
     background_color: (0,0,0,0)
@@ -396,7 +384,7 @@
                     size_hint: (0.2, 1)
                     id: _boxsr
                     orientation: 'vertical'
-                    spacing: 15
+                    spacing: 10
                     padding: (0,10,0,10)
                     canvas.before:
                         Color:
@@ -407,38 +395,71 @@
                             radius: [10]
                     BoxLayout:
                         size_hint: (1,0.8)
-                        canvas.before:
-                            Color:
-                                rgba: (0.23, 0.70, 0.44, 1)
-                            RoundedRectangle:
-                                size: self.size
-                                pos: self.pos
-                                radius: [10]
-                        Label:
-                            text: "Save" 
-                            color: (0.12,0.18,0.20,1)
-                            text_size: self.width, None
+                        Button:
+                            id: _save
+                            text: "Save"
+                            disabled: _switch.disabled 
+                            color: (0.87, 0.91, 0.92, 1) #(0.12,0.18,0.20,1)
                             font_size:25
                             halign: 'center'
                             valign: 'center'
-
+                            on_press: root.Save()
+                            background_normal: ''
+                            background_down: ''
+                            background_color: (0,0,0,0)
+                            canvas.before:
+                                Color:
+                                    rgba: (0.23, 0.70, 0.44, 1) if self.state == 'normal' else (0,1,0,1)
+                                RoundedRectangle:
+                                    size: self.size
+                                    pos: self.pos
+                                    radius: [10]
+                    
+                    BoxLayout:
+                        size_hint: (1,0.8)
+                        Button:
+                            id: _reset
+                            text: "Clear"
+                            disabled: _switch.disabled
+                            color: (0.87, 0.91, 0.92, 1) #(0.12,0.18,0.20,1)
+                            font_size:25
+                            halign: 'center'
+                            valign: 'center'
+                            on_press: root.Clear()
+                            background_normal: ''
+                            background_down: ''
+                            background_color: (0,0,0,0)
+                            canvas.before:
+                                Color:
+                                    rgba: (1, 0.70, 0.31, 1) if self.state == 'normal' else (1,0.55,0,1)
+                                RoundedRectangle:
+                                    size: self.size
+                                    pos: self.pos
+                                    radius: [10]
 
                     BoxLayout:
                         size_hint: (1,0.8)
-                        canvas.before:
-                            Color:
-                                rgba: (1, 0.38, 0.27, 1)
-                            RoundedRectangle:
-                                size: self.size
-                                pos: self.pos
-                                radius: [10]
-                        Label:
-                            text: "Reset" 
-                            color: (0.12,0.18,0.20,1)
-                            text_size: self.width, None
+                        Button:
+                            id: _reset
+                            text: "Reset"
+                            disabled: _switch.disabled
+                            color: (0.87, 0.91, 0.92, 1) #(0.12,0.18,0.20,1)
                             font_size:25
                             halign: 'center'
                             valign: 'center'
+                            on_press: root.Reset()
+                            background_normal: ''
+                            background_down: ''
+                            background_color: (0,0,0,0)
+                            canvas.before:
+                                Color:
+                                    rgba: (1, 0.38, 0.27, 1) if self.state == 'normal' else (1,0,0,1)
+                                RoundedRectangle:
+                                    size: self.size
+                                    pos: self.pos
+                                    radius: [10]
+
+
                            
             BoxLayout:
                 size_hint: (1,1.4)
