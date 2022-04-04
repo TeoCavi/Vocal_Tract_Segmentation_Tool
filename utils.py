@@ -4,6 +4,7 @@ import cv2
 import os
 import time
 import matplotlib.pyplot as plt
+from openvino.inference_engine import IECore, Blob, TensorDesc
 
 
 def prediction_recomposition(prediction, rgba, out_classes):
@@ -180,6 +181,30 @@ def prediction(fpath,images_to_keep, model_path, model_name):
     elif model_ext == '.h5':
         model = tf.keras.models.load_model(os.path.join(model_path, model_name), compile = False)
         predictions = model.predict(image, batch_size = 32)
+    elif model_ext == '': #openvino optimization
+        image = tf.transpose(image, [0,3,1,2])
+        model_xml = os.path.join(model_path, model_name,'saved_model.xml')
+        model_bin = os.path.join(model_path, model_name,'saved_model.bin')
+        print(model_xml)
+        pred = np.zeros([image.shape[0], 7, image.shape[2], image.shape[3]])
+
+        # plugin = IEPlugin("CPU", plugin_dirs=plugin_dir)
+        ie_core_handler = IECore()
+        # versions = ie.get_versions("CPU")
+        # Read IR
+        net = ie_core_handler.read_network(model=model_xml, weights=model_bin)
+        exec_net = ie_core_handler.load_network(net, device_name='CPU', num_requests=1)
+        input_blob = next(iter(net.input_info.keys()))
+        out_blob = next(iter(net.outputs))
+        net.batch_size = len([0])
+        net.input_info[input_blob].input_data.shape
+        for i in range(image.shape[0]):
+            inp = np.expand_dims(image[i], 0)
+            res = exec_net.infer(inputs={input_blob: inp})
+            pred[i,:,:,:] = res[out_blob]
+
+        predictions = tf.transpose(pred, [0,2,3,1]) 
+
 
     time_after = time.time()
     tot_time = time_after - time_before

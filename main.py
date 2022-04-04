@@ -44,7 +44,7 @@ print(device_lib.list_local_devices())
 
 DEF_UPDATE_FREQ = 0.001
 PRED_FREQ = 0.5
-FRAME_TO_EXTRACT = 354 #max 354
+FRAME_TO_EXTRACT = 5 #max 354
 VIDEO_FREQ = 1/25 #frames
 
 class ThreadWithReturnValue(Thread):
